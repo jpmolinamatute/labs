@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+server="${SRC}/server"
+client="${SRC}/client"
+cd "$server" || exit 2
+echo "Starting Server"
+"${server}/node_modules/nodemon/bin/nodemon.js" "${server}/src/app.js" &
+echo "Server was started"
+cd "${client}" || exit 2
+echo "Starting Client"
+node "${client}/node_modules/webpack-dev-server/bin/webpack-dev-server.js" --inline --progress --config "${client}/build/webpack.dev.conf.js"

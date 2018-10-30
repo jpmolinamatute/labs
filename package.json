@@ -1,0 +1,98 @@
+{
+    "name": "pokedex",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "./init",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "eslint": "^5.8.0",
+        "eslint-config-airbnb": "^17.1.0",
+        "eslint-config-airbnb-base": "^13.1.0",
+        "eslint-plugin-html": "^4.0.6",
+        "eslint-plugin-json": "^1.2.1",
+        "eslint-plugin-node": "^8.0.0",
+        "eslint-plugin-vue": "^4.7.1"
+    },
+    "eslintConfig": {
+        "extends": "airbnb-base",
+        "parserOptions": {
+            "ecmaVersion": 2017
+        },
+        "env": {
+            "node": true,
+            "es6": true,
+            "browser": true,
+            "mocha": true
+        },
+        "plugins": [
+            "node",
+            "vue",
+            "json",
+            "html",
+            "mocha"
+        ],
+        "rules": {
+            "quotes": [
+                "error",
+                "single"
+            ],
+            "indent": [
+                "error",
+                4,
+                {
+                    "SwitchCase": 1
+                }
+            ],
+            "no-underscore-dangle": [
+                "error",
+                {
+                    "allow": [
+                        "_id",
+                        "_str",
+                        "_name"
+                    ]
+                }
+            ],
+            "prefer-destructuring": [
+                "error",
+                {
+                    "object": false,
+                    "array": false
+                }
+            ],
+            "max-len": [
+                "error",
+                {
+                    "code": 120
+                }
+            ],
+            "comma-dangle": [
+                "error",
+                "never"
+            ],
+            "no-param-reassign": [
+                "error",
+                {
+                    "props": false
+                }
+            ],
+            "no-console": [
+                "warn",
+                {
+                    "allow": [
+                        "warn",
+                        "error",
+                        "info",
+                        "trace"
+                    ]
+                }
+            ]
+        }
+    }
+}
