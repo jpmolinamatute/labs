@@ -1,0 +1,5 @@
+https://www.youtube.com/watch?v=Fa4cRMaTDUI
+https://gist.githubusercontent.com/armgilles/194bcff35001e7eb53a2a8b441e8b2c6/raw/92200bc0a673d5ce2110aaad4544ed6c4010f687/pokemon.csv
+mongoimport --uri=mongodb://pokemon:dev@ichigo:57017/pokedex --drop -c pokemonlist --type csv --file=./pokemon.csv --headerline --columnsHaveTypes --ignoreBlanks -vv --numInsertionWorkers 4
+
+https://www.pokemon.com/us/pokedex/bulbasaur
