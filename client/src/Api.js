@@ -5,8 +5,9 @@ export default class API {
             baseURL: 'http://localhost:8081'
         });
     }
-    fetchTypes() {
-        return this.call().get('types');
+    fetchTypes(against) {
+        console.log(against);
+        return this.call().get(`types/against/${against}`);
     }
     fetchPokemons() {
         return this.call().get('pokemons')

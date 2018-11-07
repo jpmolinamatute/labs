@@ -1,2 +1,4 @@
+!**/.gitkeep
 **/node_modules
 /.vscode
+/tools/tmp

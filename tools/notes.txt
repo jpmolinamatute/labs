@@ -4,3 +4,5 @@ https://gist.githubusercontent.com/armgilles/194bcff35001e7eb53a2a8b441e8b2c6/ra
 mongoimport --uri=mongodb://pokemon:dev@ichigo:57017/pokedex --drop -c pokemonlist --type csv --file=./pokemon.csv --headerline --columnsHaveTypes --ignoreBlanks -vv --numInsertionWorkers 4
 
 https://www.pokemon.com/us/pokedex/bulbasaur
+
+wget --output-document - --quiet https://www.pokemon.com/us/pokedex/bulbasaur | grep -A2 '<span class="attribute-title">Category</span>'
