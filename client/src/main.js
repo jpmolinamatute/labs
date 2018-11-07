@@ -3,14 +3,15 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import App from './App.vue';
-import type from './components/type.vue';
+// import type from './components/type.vue';
+import pokemonList from './components/pokemonList.vue'
 
 Vue.config.productionTip = false;
 const routes = [
     {
         path: '/',
-        name: 'type',
-        component: type
+        name: 'pokemonList',
+        component: pokemonList
     }
 ];
 

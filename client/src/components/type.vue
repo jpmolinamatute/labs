@@ -1,6 +1,5 @@
 <template>
     <div>
-        <p>Hola!!!!</p>
         <table>
             <thead>
                 <tr>

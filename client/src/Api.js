@@ -5,11 +5,13 @@ export default class API {
             baseURL: 'http://localhost:8081'
         });
     }
-    fetchTypes(against) {
-        console.log(against);
-        return this.call().get(`types/against/${against}`);
+    fetchType(against) {
+        return this.call().get(`type/against/${against}`);
     }
-    fetchPokemons() {
+    fetchAllTypes() {
+        return this.call().get(`types`);
+    }
+    fetchAllPokemons() {
         return this.call().get('pokemons')
     }
 };

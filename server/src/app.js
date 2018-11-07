@@ -7,13 +7,24 @@ const MongoClient = require('mongodb').MongoClient;
 
 const app = express();
 const dbName = 'pokedex';
-const url = `mongodb://pokemon:dev@naruto:57017/${dbName}`;
+const url = `mongodb://pokemon:dev@localhost:57017/${dbName}`;
+
 const query = async (collectionName, query = {}, opt = {}) => {
-    const client = await MongoClient.connect(url, { useNewUrlParser: true });
-    const db = client.db(dbName);
-    const collection = db.collection(collectionName);
-    const data = await collection.find(query, opt).toArray();
-    client.close();
+    let data;
+    try {
+        const client = await MongoClient.connect(url, { useNewUrlParser: true });
+        const db = client.db(dbName);
+        const collection = db.collection(collectionName);
+        data = await collection.find(query, opt).toArray();
+        client.close();
+
+    }
+    catch (e) {
+        console.error('Error: ');
+        console.log(e);
+
+    }
+
     return data;
 }
 
@@ -44,7 +55,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 
-app.get('/types/against/:against', (req, res) => {
+app.get('/type/against/:against', (req, res) => {
     let pokedexQuery = {};
     if (typeof req.params.against === 'string') {
         pokedexQuery.efective = req.params.against;
@@ -54,6 +65,21 @@ app.get('/types/against/:against', (req, res) => {
     const result = query('pokemontypes');
     result.then((r) => {
         res.send(r);
+    });
+});
+
+
+app.get('/types', (req, res) => {
+    const result = query('pokemontypes', {}, { _id: 1 });
+    result.then((r) => {
+        let list = [];
+        if (Array.isArray(r)) {
+            list = r.map((item) => {
+                return item._id;
+            });
+        }
+        res.send(list);
+
     });
 });
 
