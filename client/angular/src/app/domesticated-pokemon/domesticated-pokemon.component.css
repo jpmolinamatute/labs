@@ -1,0 +1,41 @@
+div#pokemon-domesticated-list{
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+}
+
+div.pokemon-wrapper{
+    display: inline-block;
+    border: 2px transparent solid;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+div.controls{
+    margin: 0 auto;
+    width: 62px;
+    height: 24px;
+}
+
+div.controls button{
+    background-color: transparent;
+    border: none;
+    color: black;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 5px;
+}
+
+span.value{
+    text-transform: capitalize;
+}
+
+span.label{
+    font-weight: bolder;
+}
+
+img.type-badges{
+    margin: 2px;
+}

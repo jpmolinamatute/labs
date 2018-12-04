@@ -1,0 +1,10 @@
+<div id="pokemon-viewer">
+    <div id="pokemon-opponent-list">
+        <div *ngFor="let pokemon of list" class="pokemon-wrapper" [ngClass]="pokemon.selected ? 'p-selected' : ''">
+            <label for="opponent-{{pokemon._id}}" [style.background-image]="getBackground(pokemon._id)"></label>
+            <input type="checkbox" id="opponent-{{pokemon._id}}" name="opponent-pokemon" value="{{pokemon._id}}"
+                [checked]="pokemon.selected" (change)="pokemon.selected = !pokemon.selected; updateList(pokemon._id);">
+        </div>
+    </div>
+</div>
+<button type="button" (click)="getOpponents();">Get</button>

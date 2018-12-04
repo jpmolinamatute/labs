@@ -1,0 +1,23 @@
+<div id="pokemon-domesticated-list">
+    <div *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper">
+        <img src="assets/img/{{pokemon.pokemonid}}.png" alt="{{pokemon.nickname}}">
+        <br>
+        <ul>
+            <li>
+                <span class="value">{{pokemon.nickname}}</span>
+            </li>
+            <li>
+                <span class="label">CP: </span><span class="value">{{pokemon.cp}}</span>
+                <span class="label">HP: </span><span class="value">{{pokemon.hp}}</span>
+            </li>
+            <li>
+                <img *ngFor="let img of pokemon.types" src="assets/img/{{img}}.png" alt="{{img}}" class="type-badges">
+            </li>
+        </ul>
+        <br>
+        <div class="controls">
+            <button type="button" data-type="edit" (click)="edit(pokemon);"><i class="fas fa-pen"></i></button>
+            <button type="button" data-type="delete" (click)="del(pokemon);"><i class="far fa-trash-alt"></i></button>
+        </div>
+    </div>
+</div>
