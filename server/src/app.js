@@ -3,20 +3,21 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
 
 
 const app = express();
 const dbName = 'pokedex';
 const url = `mongodb://pokemon:dev@naruto:57017/${dbName}`;
 
-const query = async (collectionName, query = {}, fields = {}, sort = { _id: 1 }) => {
+const query = async (collectionName, queryField = {}, fields = {}, sort = { _id: 1 }) => {
     const client = await MongoClient.connect(url, { useNewUrlParser: true });
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
-    const data = await collection.find(query, fields).sort(sort).toArray();
+    const data = await collection.find(queryField, fields).sort(sort).toArray();
     client.close();
     return data;
-}
+};
 
 const write = async (collectionName, data) => {
     const client = await MongoClient.connect(url, { useNewUrlParser: true });
@@ -27,26 +28,35 @@ const write = async (collectionName, data) => {
     return response;
 };
 
-async function getpokemonTeam(against) {
-    let team = null;
+const del = async (collectionName, queryField) => {
+    const client = await MongoClient.connect(url, { useNewUrlParser: true });
+    const db = client.db(dbName);
+    const collection = db.collection(collectionName);
+    const response = await collection.deleteOne(queryField);
+    client.close();
+    return response;
+};
 
-    if (Array.isArray(against) && against.length > 0) {
-        const length = against.length;
-        team = []
-        against.forEach((a) => {
-            const item = {
-                oponent: a,
-                members1: db.pokemontypes.find({ efective: a }, { _id: 1 }).fetch(),
-                members2: db.pokemontypes.find({ fair: a }, { _id: 1 }).fetch()
-            };
+// async function getpokemonTeam(against) {
+//     let team = null;
 
-            team.push(item);
-        });
+//     if (Array.isArray(against) && against.length > 0) {
+//         const length = against.length;
+//         team = [];
+//         against.forEach((a) => {
+//             const item = {
+//                 oponent: a,
+//                 members1: db.pokemontypes.find({ efective: a }, { _id: 1 }).fetch(),
+//                 members2: db.pokemontypes.find({ fair: a }, { _id: 1 }).fetch()
+//             };
 
-        team = 5;
-    }
-    return team;
-}
+//             team.push(item);
+//         });
+
+//         team = 5;
+//     }
+//     return team;
+// }
 
 
 app.use(morgan('combined'));
@@ -130,4 +140,15 @@ app.get('/api/mypokemons', (req, res) => {
     });
 });
 
+app.delete('/api/mypokemons', (req, res) => {
+    if (typeof req.body === 'object' && typeof req.body._id === 'string') {
+        const _id = { _id: new ObjectID.createFromHexString(req.body._id) };
+        const response = del('domesticatedPokemon', _id);
+        response.then(() => {
+            res.send({ status: 'OK' });
+        });
+    } else {
+        res.send({ status: 'INVALID' });
+    }
+});
 app.listen(process.env.PORT || 8081);

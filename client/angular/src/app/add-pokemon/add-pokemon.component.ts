@@ -34,17 +34,13 @@ function filterName(str) {
 export class AddPokemonComponent implements OnInit {
     pokemonsList: Pokemon[];
     typesList: String[];
-    model: MyPokemon = {
+    model = {
         pokemonid: -1,
-        hp: 0,
-        cp: 0,
         chargedattack: {
-            type: 'none',
-            damage: 0
+            type: 'none'
         },
         fastattack: {
-            type: 'none',
-            damage: 0
+            type: 'none'
         }
     };
 
@@ -84,22 +80,25 @@ export class AddPokemonComponent implements OnInit {
             pokemonid
         } = pokemonForm.control.value;
 
-        this.myPokemonService.addPokemon({
-            pokemonid: +pokemonid,
+        const fastattack = {
+            type: fastattacktype,
+            damage: +fastattackdamage,
+            name: filterName(fastattackname)
+        };
+        const chargedattack = {
+            type: chargedattacktype,
+            damage: +chargedattackdamage,
+            name: filterName(chargedattackname)
+        };
+        const pokemon = new MyPokemon(
+            +pokemonid,
             cp,
             hp,
-            fastattack: {
-                type: fastattacktype,
-                damage: +fastattackdamage,
-                name: filterName(fastattackname)
-            },
-            chargedattack: {
-                type: chargedattacktype,
-                damage: +chargedattackdamage,
-                name: filterName(chargedattackname)
-            },
-            nickname: filterName(nickname)
-        }).subscribe((result) => {
+            fastattack,
+            chargedattack,
+            nickname
+        );
+        this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
             if (result.ok === 1) {
                 pokemonForm.reset(resetValue);
                 console.log('After Subscribe but before getDomesticatedPokemons()');

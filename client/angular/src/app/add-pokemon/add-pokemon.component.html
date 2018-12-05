@@ -2,7 +2,8 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="new-pokemon">Pokemon</label>
-            <select id="new-pokemon" class="form-control" [(ngModel)]="model.pokemonid" name="pokemonid" required>
+            <select id="new-pokemon" class="form-control" [(ngModel)]="model.pokemonid" name="pokemonid" tabindex="1"
+                required>
                 <option value="-1">&#45;&#45; Select one &#45;&#45;</option>
                 <option *ngFor="let pokemonItem of pokemonsList" value="{{pokemonItem._id}}">{{pokemonItem.name}}</option>
             </select>
@@ -10,16 +11,17 @@
         <div class="form-group col-md-2">
             <label for="new-pokemon-hp">HP</label>
             <input type="number" id="new-pokemon-hp" class="form-control" [(ngModel)]="model.hp" name="hp" min="10"
-                value="0" required>
+                tabindex="2" required>
         </div>
         <div class="form-group col-md-2">
             <label for="new-pokemon-cp">CP</label>
             <input type="number" id="new-pokemon-cp" class="form-control" [(ngModel)]="model.cp" name="cp" min="10"
-                value="0" required>
+                tabindex="3" required>
         </div>
         <div class="form-group col-md-4">
             <label for="new-pokemon-nickname">Nickname</label>
-            <input type="text" id="new-pokemon-nickname" class="form-control" [(ngModel)]="model.nickname" name="nickname">
+            <input type="text" id="new-pokemon-nickname" class="form-control" [(ngModel)]="model.nickname" name="nickname"
+                tabindex="4">
         </div>
     </div>
 
@@ -28,26 +30,27 @@
             <div class="form-group">
                 <label for="fast-attack-type">Fast Attack Type:</label>
                 <select id="fast-attack-type" class="form-control" [(ngModel)]="model.fastattack.type" name="fastattacktype"
-                    required>
+                    tabindex="5" required>
                     <option value="none" selected>&#45;&#45; Select one &#45;&#45;</option>
                     <option *ngFor="let type of typesList" value="{{type._id}}">{{type._id}}</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="fast-attack-name">Fast Attack Name</label>
-                <input type="text" id="fast-attack-name" class="form-control" [(ngModel)]="model.fastattack.name" name="fastattackname">
+                <input type="text" id="fast-attack-name" class="form-control" [(ngModel)]="model.fastattack.name" name="fastattackname"
+                    tabindex="7">
             </div>
             <div class="form-group">
                 <label for="fast-attack-damage">Fast Attack Damage</label>
                 <input type="number" id="fast-attack-damage" class="form-control" [(ngModel)]="model.fastattack.damage"
-                    name="fastattackdamage" min="10" value="0" required>
+                    name="fastattackdamage" min="10" tabindex="9" required>
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
                 <label for="charged-attack-type">Charged Attack Type:</label>
                 <select id="charged-attack-type" class="form-control" [(ngModel)]="model.chargedattack.type" name="chargedattacktype"
-                    required>
+                    tabindex="6" required>
                     <option value="none" selected>&#45;&#45; Select one &#45;&#45;</option>
                     <option *ngFor="let type of typesList" value="{{type._id}}">{{type._id}}</option>
                 </select>
@@ -55,17 +58,17 @@
             <div class="form-group">
                 <label for="charged-attack-name">Charged Attack Name</label>
                 <input type="text" id="charged-attack-name" class="form-control" [(ngModel)]="model.chargedattack.name"
-                    name="chargedattackname">
+                    name="chargedattackname" tabindex="8">
             </div>
             <div class="form-group">
                 <label for="charged-attack-damage">Charged Attack Damage</label>
                 <input type="number" id="charged-attack-damage" class="form-control" [(ngModel)]="model.chargedattack.damage"
-                    name="chargedattackdamage" value="0" min="10" required>
+                    name="chargedattackdamage" min="10" tabindex="10" required>
             </div>
         </div>
     </div>
     <div class="form-row">
-        <button type="button" (click)="clearForm(pokemonForm);" title="Clear form" class="btn btn-sm">Clear</button>
-        <button type="submit" title="Save new Pokemon" class="btn btn-sm" [disabled]="pokemonForm.invalid">Save</button>
+        <button type="button" (click)="clearForm(pokemonForm);" title="Clear form" class="btn btn-sm" tabindex="11">Clear</button>
+        <button type="submit" title="Save new Pokemon" class="btn btn-sm" [disabled]="pokemonForm.invalid" tabindex="12">Save</button>
     </div>
 </form>

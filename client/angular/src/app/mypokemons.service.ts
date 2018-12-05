@@ -40,7 +40,7 @@ export class MypokemonsService {
 
     addPokemon(pokemon: MyPokemon): Observable<any> {
         return this.http.post<any>(this.pokemonUrl, pokemon, httpOptions).pipe(
-            tap((pokemonTapId) => this.log(`added pokemon w/ id=${pokemonTapId}`)),
+            tap((pokemonTapId) => this.log(`pokemon added w/ id=${pokemonTapId}`)),
             catchError(this.handleError<any>('addPokemon', 'FAILED'))
         );
     }
@@ -50,5 +50,18 @@ export class MypokemonsService {
                 tap(_ => this.log('fetched my pokemons')),
                 catchError(this.handleError('getAllPokemons', []))
             );
+    }
+    removePokemon(_id: string): Observable<any> {
+        const opt = {
+            body: { _id },
+            headers: new HttpHeaders({
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': environment.myEndpoint
+            })
+        };
+        return this.http.delete<any>(this.pokemonUrl, opt).pipe(
+            tap((response) => this.log(`pokemon deleted w/ _id=${_id}`)),
+            catchError(this.handleError<any>('addPokemon', 'FAILED'))
+        );
     }
 }

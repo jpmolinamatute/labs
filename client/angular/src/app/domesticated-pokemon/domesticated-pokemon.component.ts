@@ -25,11 +25,7 @@ export class DomesticatedPokemonComponent implements OnInit {
     getDomesticatedPokemons(): void {
         this.myPokemonService.getDomesticatedPokemons()
             .subscribe((pokemons) => {
-                console.log('Before this is');
-                console.log(this.domesticatedList, pokemons);
                 this.domesticatedList = this.domesticatedList.concat(pokemons);
-                console.log('After this is');
-                console.log(this.domesticatedList);
             });
     }
 
@@ -39,6 +35,11 @@ export class DomesticatedPokemonComponent implements OnInit {
     }
 
     del(pokemon: MyPokemon): void {
-        console.log(pokemon);
+        this.myPokemonService.removePokemon(pokemon._id)
+            .subscribe((result) => {
+                if (result.status === 'OK') {
+                    this.getDomesticatedPokemons();
+                }
+            });
     }
 }

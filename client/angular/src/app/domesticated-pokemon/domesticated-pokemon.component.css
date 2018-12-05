@@ -5,37 +5,57 @@ div#pokemon-domesticated-list{
 }
 
 div.pokemon-wrapper{
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
     border: 2px transparent solid;
     margin-right: 15px;
     margin-bottom: 15px;
 }
 
-div.controls{
+div.pokemon-wrapper > img{
+    order: 1;
+}
+
+div.pokemon-wrapper > p{
+    order: 2;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+div.pokemon-types{
+    order: 3;
+    margin: 0 auto;
+    width: auto;    
+}
+
+div.pokemon-stats{
+    order: 4;
+}
+
+div.pokemon-attacks{
+    order: 5;
+    display: flex;
+    flex-direction: row;
+}
+
+div.pokemon-attack > div:first-child{
+    order: 1;
+}
+
+div.pokemon-attack > div:nth-child(2){
+    order: 2;
+}
+
+
+div.pokemon-controls{
+    order: 6;
     margin: 0 auto;
     width: 62px;
     height: 24px;
 }
 
-div.controls button{
+div.pokemon-controls button{
     background-color: transparent;
     border: none;
     color: black;
-}
-
-ul {
-    list-style-type: none;
-    padding-left: 5px;
-}
-
-span.value{
-    text-transform: capitalize;
-}
-
-span.label{
-    font-weight: bolder;
-}
-
-img.type-badges{
-    margin: 2px;
 }
