@@ -59,3 +59,10 @@ div.pokemon-controls button{
     border: none;
     color: black;
 }
+
+span.label {
+    font-weight: bolder;
+}
+span {
+    text-transform: capitalize;
+}

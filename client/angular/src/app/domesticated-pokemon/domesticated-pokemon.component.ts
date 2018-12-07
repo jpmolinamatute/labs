@@ -3,6 +3,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 import { MyPokemon } from '../mypokemon';
 import { MypokemonsService } from '../mypokemons.service';
+import { PokemonlistService } from '../pokemonlist.service';
 
 const myArray: MyPokemon[] = [];
 
@@ -14,7 +15,11 @@ const myArray: MyPokemon[] = [];
 export class DomesticatedPokemonComponent implements OnInit {
     domesticatedList: MyPokemon[] = myArray;
 
-    constructor(private _sanitizer: DomSanitizer, private myPokemonService: MypokemonsService) { }
+    constructor(
+        private _sanitizer: DomSanitizer,
+        private myPokemonService: MypokemonsService,
+        private pokemonListService: PokemonlistService
+    ) { }
 
     ngOnInit() {
         this.getDomesticatedPokemons();
@@ -23,12 +28,18 @@ export class DomesticatedPokemonComponent implements OnInit {
         return this._sanitizer.bypassSecurityTrustStyle('assets/img/types.badgets.jpg');
     }
     getDomesticatedPokemons(): void {
-        this.myPokemonService.getDomesticatedPokemons()
-            .subscribe((pokemons) => {
-                this.domesticatedList = this.domesticatedList.concat(pokemons);
-            });
+        const that = this;
+        const observable = this.myPokemonService.getDomesticatedPokemons();
+        observable.subscribe((pokemons) => {
+            that.domesticatedList = pokemons;
+        });
     }
-
+    getPokemonName(pokemonid: number): string {
+        return this.pokemonListService.queryList(pokemonid, 'name');
+    }
+    getPokemonType(pokemonid: number): string[] {
+        return this.pokemonListService.queryList(pokemonid, 'types');
+    }
     edit(pokemon: MyPokemon): void {
         console.log(pokemon);
 

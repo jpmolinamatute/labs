@@ -48,6 +48,7 @@ export class MypokemonsService {
         return this.http.get<MyPokemon[]>(this.pokemonUrl)
             .pipe(
                 tap(_ => this.log('fetched my pokemons')),
+
                 catchError(this.handleError('getAllPokemons', []))
             );
     }

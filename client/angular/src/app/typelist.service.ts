@@ -28,8 +28,8 @@ export class TypelistService {
             return of(result as T);
         };
     }
-    getPokemonTypes(): Observable<String[]> {
-        return this.http.get<String[]>(this.pokemonUrl)
+    getPokemonTypes(): Observable<string[]> {
+        return this.http.get<string[]>(this.pokemonUrl)
             .pipe(
                 tap(_ => this.log('fetched pokemon type')),
                 catchError(this.handleError('getPokemonTypes', []))

@@ -2,11 +2,15 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="new-pokemon">Pokemon</label>
-            <select id="new-pokemon" class="form-control" [(ngModel)]="model.pokemonid" name="pokemonid" tabindex="1"
-                required>
-                <option value="-1">&#45;&#45; Select one &#45;&#45;</option>
-                <option *ngFor="let pokemonItem of pokemonsList" value="{{pokemonItem._id}}">{{pokemonItem.name}}</option>
-            </select>
+            <input type="text" id="new-pokemon" class="form-control" [(ngModel)]="model.pokemonname" name="pokemonname"
+                tabindex="1" (keyup)="onKey($event);" required>
+            <ul *ngIf="pokemonsFiltered.length > 0">
+                <li *ngFor="let pokemon of pokemonsFiltered">
+                    <button type="button" (click)="addPokemonName(pokemon);" class="btn btn-sm btn-link">
+                        {{pokemon}}
+                    </button>
+                </li>
+            </ul>
         </div>
         <div class="form-group col-md-2">
             <label for="new-pokemon-hp">HP</label>
@@ -63,12 +67,13 @@
             <div class="form-group">
                 <label for="charged-attack-damage">Charged Attack Damage</label>
                 <input type="number" id="charged-attack-damage" class="form-control" [(ngModel)]="model.chargedattack.damage"
-                    name="chargedattackdamage" min="10" tabindex="10" required>
+                    name="chargedattackdamage" min="10" tabindex="10" (keyup.enter)="savePokemon(pokemonForm);"
+                    required>
             </div>
         </div>
     </div>
     <div class="form-row">
-        <button type="button" (click)="clearForm(pokemonForm);" title="Clear form" class="btn btn-sm" tabindex="11">Clear</button>
+        <button type="reset" title="Clear form" class="btn btn-sm" tabindex="11">Clear</button>
         <button type="submit" title="Save new Pokemon" class="btn btn-sm" [disabled]="pokemonForm.invalid" tabindex="12">Save</button>
     </div>
 </form>

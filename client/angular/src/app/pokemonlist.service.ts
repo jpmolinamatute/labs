@@ -12,7 +12,12 @@ import { MessageService } from './message.service';
 })
 export class PokemonlistService {
     private pokemonUrl = `${environment.myEndpoint}/api/allpokemons`;  // URL to web api
-    constructor(private http: HttpClient, private messageService: MessageService) { }
+    private list: Pokemon[] = [];
+    constructor(private http: HttpClient, private messageService: MessageService) {
+        this.http.get<Pokemon[]>(this.pokemonUrl).subscribe((data) => {
+            this.list = data;
+        });
+    }
     private log(message: string) {
         this.messageService.add(`PokemonlistService: ${message}`);
     }
@@ -27,6 +32,24 @@ export class PokemonlistService {
             // Let the app keep running by returning an empty result.
             return of(result as T);
         };
+    }
+    getPokemonId(name: string): number {
+        let info;
+        this.list.forEach((item) => {
+            if (item.name === name) {
+                info = item._id;
+            }
+        });
+        return info;
+    }
+    queryList(pokemonid: number, field: string, regex?: boolean) {
+        let info;
+        this.list.forEach((item) => {
+            if (item._id === pokemonid) {
+                info = item[field];
+            }
+        });
+        return info;
     }
     getAllPokemons(): Observable<Pokemon[]> {
         return this.http.get<Pokemon[]>(this.pokemonUrl)

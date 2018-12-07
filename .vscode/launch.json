@@ -1,0 +1,25 @@
+{
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Angular",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:4200/",
+            "webRoot": "${workspaceFolder}/client/angular",
+            "runtimeExecutable": "/usr/bin/chromium",
+            "runtimeArgs": [
+                "--remote-debugging-port=9222"
+            ],
+            "userDataDir": true
+        },
+        {
+            "name": "Vue",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8080/",
+            "webRoot": "${workspaceFolder}/client/vue",
+            "runtimeExecutable": "/usr/bin/chromium"
+        },
+    ]
+}

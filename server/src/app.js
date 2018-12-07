@@ -107,36 +107,9 @@ app.post('/api/mypokemons', (req, res) => {
 });
 
 app.get('/api/mypokemons', (req, res) => {
-    const result = query('domesticatedPokemon', {}, {}, { pokemonid: 1 });
+    const result = query('domesticatedPokemon', {}, {}, { cp: -1 });
     result.then((doc) => {
-        const domesticatedPokemonList = [];
-        doc.forEach((pokemon) => {
-            if (!domesticatedPokemonList.includes(pokemon.pokemonid)) {
-                domesticatedPokemonList.push(pokemon.pokemonid);
-            }
-        });
-
-        if (domesticatedPokemonList.length > 0) {
-            const queryField = { _id: { $in: domesticatedPokemonList } };
-            const fieldsField = { _id: 1, name: 1, types: 1 };
-            const allPokemons = query('pokemonlist', queryField, fieldsField);
-            allPokemons.then((allDoc) => {
-                const mergePokemons = doc.map((pokemon) => {
-                    allDoc.forEach((innerAll) => {
-                        if (innerAll._id === pokemon.pokemonid) {
-                            pokemon.types = innerAll.types;
-                            if (typeof pokemon.nickname === 'undefined') {
-                                pokemon.nickname = innerAll.name;
-                            }
-                        }
-                    });
-                    return pokemon;
-                });
-                res.send(mergePokemons);
-            });
-        } else {
-            res.send(doc);
-        }
+        res.send(doc);
     });
 });
 

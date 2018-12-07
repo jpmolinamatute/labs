@@ -10,18 +10,14 @@ import { MyPokemon } from '../mypokemon';
 
 
 const resetValue = {
-    pokemonid: -1,
+    pokemonname: '',
     chargedattacktype: 'none',
-    fastattacktype: 'none',
-    chargedattackdamage: 0,
-    fastattackdamage: 0,
-    hp: 0,
-    cp: 0
+    fastattacktype: 'none'
 };
 function filterName(str) {
-    let filteredStr;
-    if (typeof str === 'string' && str.length > 0) {
-        filteredStr = str.toLowerCase();
+    let filteredStr = null;
+    if (typeof str === 'string' && str.trim().length > 0) {
+        filteredStr = str.toLowerCase().trim();
     }
     return filteredStr;
 }
@@ -33,9 +29,10 @@ function filterName(str) {
 })
 export class AddPokemonComponent implements OnInit {
     pokemonsList: Pokemon[];
-    typesList: String[];
+    typesList: string[];
+    pokemonsFiltered: string[] = [];
     model = {
-        pokemonid: -1,
+        pokemonname: '',
         chargedattack: {
             type: 'none'
         },
@@ -63,8 +60,18 @@ export class AddPokemonComponent implements OnInit {
         this.typeService.getPokemonTypes()
             .subscribe(types => this.typesList = types);
     }
-    clearForm(pokemonForm: NgForm): void {
-        pokemonForm.reset(resetValue);
+    onKey(event: any): void {
+        const name = filterName(event.target.value);
+        this.pokemonsFiltered = [];
+        if (name !== null) {
+            const re = new RegExp(name);
+            this.pokemonsList.forEach((pokemon) => {
+                if (re.test(pokemon.name)) {
+                    this.pokemonsFiltered.push(pokemon.name);
+                }
+            });
+        }
+
     }
     savePokemon(pokemonForm: NgForm): void {
         const {
@@ -77,7 +84,7 @@ export class AddPokemonComponent implements OnInit {
             fastattackname,
             fastattacktype,
             nickname,
-            pokemonid
+            pokemonname
         } = pokemonForm.control.value;
 
         const fastattack = {
@@ -90,23 +97,32 @@ export class AddPokemonComponent implements OnInit {
             damage: +chargedattackdamage,
             name: filterName(chargedattackname)
         };
-        const pokemon = new MyPokemon(
-            +pokemonid,
-            cp,
-            hp,
-            fastattack,
-            chargedattack,
-            nickname
-        );
-        this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
-            if (result.ok === 1) {
-                pokemonForm.reset(resetValue);
-                console.log('After Subscribe but before getDomesticatedPokemons()');
+        const name = filterName(nickname);
+        const pokemonid = this.pokemonService.getPokemonId(pokemonname);
+        if (typeof pokemonid === 'number') {
+            const pokemon = new MyPokemon(
+                pokemonid,
+                cp,
+                hp,
+                fastattack,
+                chargedattack,
+                name
+            );
+            this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
+                if (result.ok === 1) {
+                    pokemonForm.reset(resetValue);
+                    this.domesticated.getDomesticatedPokemons();
+                    document.getElementById('new-pokemon').focus();
+                } else {
+                    console.error('Error: something went wrong when inserting a pokemon');
+                }
+            });
+        }
 
-                this.domesticated.getDomesticatedPokemons();
-            } else {
-                console.error('Error: something went wrong when inserting a pokemon');
-            }
-        });
+    }
+
+    addPokemonName(pokemon: string): void {
+        this.model.pokemonname = pokemon;
+        this.pokemonsFiltered = [];
     }
 }

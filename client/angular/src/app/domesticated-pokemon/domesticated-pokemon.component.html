@@ -1,19 +1,22 @@
 <div id="pokemon-domesticated-list">
     <div *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper">
-        <img src="assets/img/{{pokemon.pokemonid}}.png" alt="{{pokemon.nickname}}">
-        <p>{{pokemon.nickname}}</p>
+        <img src="assets/img/{{pokemon.pokemonid}}.png" alt="{{getPokemonName(pokemon.pokemonid)}}">
+        <p *ngIf="pokemon.nickname; else elseBlock">{{pokemon.nickname}}</p>
+        <ng-template #elseBlock>
+            <p>{{getPokemonName(pokemon.pokemonid)}}</p>
+        </ng-template>
         <div class="pokemon-types">
-            <img *ngFor="let img of pokemon.types" src="assets/img/{{img}}.png" alt="{{img}}" class="type-badges">
+            <img *ngFor="let img of getPokemonType(pokemon.pokemonid)" src="assets/img/{{img}}.png" alt="{{img}}" class="type-badges">
         </div>
         <div class="pokemon-stats">
-            <span class="label">CP: </span><span class="value">{{pokemon.cp}}</span>
-            <span class="label">HP: </span><span class="value">{{pokemon.hp}}</span>
+            <span class="label">CP: </span><span class="value"> {{pokemon.cp}} </span>
+            <span class="label">HP: </span><span class="value"> {{pokemon.hp}} </span>
         </div>
         <div class="pokemon-attacks">
             <div>
                 <p>FA</p>
                 <img src="assets/img/{{pokemon.fastattack.type}}.png" alt="{{pokemon.fastattack.type}}" class="type-badges">
-                <span *ngIf="pokemon.fastattack.name">{{pokemon.fastattack.name}}</span>
+                <span *ngIf="pokemon.fastattack.name"> {{pokemon.fastattack.name}} </span>
                 <span>{{pokemon.fastattack.damage}}</span>
             </div>
             <div>
