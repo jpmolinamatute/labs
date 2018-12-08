@@ -4,7 +4,7 @@ import { NgForm } from '@angular/forms';
 import { PokemonlistService } from '../pokemonlist.service';
 import { TypelistService } from '../typelist.service';
 import { MypokemonsService } from '../mypokemons.service';
-import { DomesticatedPokemonComponent } from '../domesticated-pokemon/domesticated-pokemon.component';
+import { DomesticatedPokemonsComponent } from '../domesticated-pokemons/domesticated-pokemons.component';
 import { Pokemon } from '../pokemon';
 import { MyPokemon } from '../mypokemon';
 
@@ -22,7 +22,7 @@ function filterName(str) {
     return filteredStr;
 }
 @Component({
-    providers: [DomesticatedPokemonComponent],
+    providers: [DomesticatedPokemonsComponent],
     selector: 'app-add-pokemon',
     templateUrl: './add-pokemon.component.html',
     styleUrls: ['./add-pokemon.component.css']
@@ -45,7 +45,7 @@ export class AddPokemonComponent implements OnInit {
         private pokemonService: PokemonlistService,
         private typeService: TypelistService,
         private myPokemonService: MypokemonsService,
-        private domesticated: DomesticatedPokemonComponent
+        private domesticated: DomesticatedPokemonsComponent
     ) { }
 
     ngOnInit() {

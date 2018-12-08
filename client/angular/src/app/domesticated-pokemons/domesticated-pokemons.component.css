@@ -1,0 +1,20 @@
+div#pokemon-domesticated-list{
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+}
+
+div.pokemon-wrapper{
+    border: 2px transparent solid;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+div.pokemon-wrapper > button{
+    cursor: pointer;
+}
+
+div.pokemon-wrapper > p{
+    text-align: center;
+    text-transform: capitalize;
+}
