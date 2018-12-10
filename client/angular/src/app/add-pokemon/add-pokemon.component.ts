@@ -3,12 +3,15 @@ import { NgForm } from '@angular/forms';
 
 import { PokemonlistService } from '../pokemonlist.service';
 import { TypelistService } from '../typelist.service';
+import { PokemonType } from '../type';
 import { MypokemonsService } from '../mypokemons.service';
-import { DomesticatedPokemonsComponent } from '../domesticated-pokemons/domesticated-pokemons.component';
 import { Pokemon } from '../pokemon';
 import { MyPokemon } from '../mypokemon';
 
-
+interface PokemonFiler {
+    name: string;
+    index: number;
+}
 const resetValue = {
     pokemonname: '',
     chargedattacktype: 'none',
@@ -22,15 +25,15 @@ function filterName(str) {
     return filteredStr;
 }
 @Component({
-    providers: [DomesticatedPokemonsComponent],
     selector: 'app-add-pokemon',
     templateUrl: './add-pokemon.component.html',
     styleUrls: ['./add-pokemon.component.css']
 })
 export class AddPokemonComponent implements OnInit {
     pokemonsList: Pokemon[];
-    typesList: string[];
-    pokemonsFiltered: string[] = [];
+    typesList: PokemonType[];
+    pokemonsFiltered: PokemonFiler[] = [];
+    indexSeleted = 0;
     model = {
         pokemonname: '',
         chargedattack: {
@@ -44,8 +47,7 @@ export class AddPokemonComponent implements OnInit {
     constructor(
         private pokemonService: PokemonlistService,
         private typeService: TypelistService,
-        private myPokemonService: MypokemonsService,
-        private domesticated: DomesticatedPokemonsComponent
+        private myPokemonService: MypokemonsService
     ) { }
 
     ngOnInit() {
@@ -61,17 +63,38 @@ export class AddPokemonComponent implements OnInit {
             .subscribe(types => this.typesList = types);
     }
     onKey(event: any): void {
-        const name = filterName(event.target.value);
-        this.pokemonsFiltered = [];
-        if (name !== null) {
-            const re = new RegExp(name);
-            this.pokemonsList.forEach((pokemon) => {
-                if (re.test(pokemon.name)) {
-                    this.pokemonsFiltered.push(pokemon.name);
-                }
-            });
+        const regexLETTER = /Key[ABCDEFGHIJKLMNOPQRSTUVWXYZ]/;
+        if (event.code === 'Enter' &&
+            typeof this.pokemonsFiltered[this.indexSeleted] === 'object' &&
+            typeof this.pokemonsFiltered[this.indexSeleted].name === 'string') {
+            this.addPokemonName(this.pokemonsFiltered[this.indexSeleted].name);
+        } else if (regexLETTER.test(event.code)) {
+            const name = filterName(event.target.value);
+            if (typeof name === 'string' && name.length > 2) {
+                this.pokemonsFiltered = [];
+                const re = new RegExp(name);
+                let index = 0;
+                this.pokemonsList.forEach((pokemon) => {
+                    if (re.test(pokemon.name)) {
+                        this.pokemonsFiltered.push({
+                            name: pokemon.name,
+                            index
+                        });
+                        index += 1;
+                    }
+                });
+            }
         }
-
+    }
+    selectPokemon(event) {
+        if (event.code === 'ArrowDown' || event.code === 'ArrowUp') {
+            if (event.code === 'ArrowDown' && this.indexSeleted < this.pokemonsFiltered.length - 1) {
+                this.indexSeleted += 1;
+            } else if (event.code === 'ArrowUp' && this.indexSeleted > 0) {
+                this.indexSeleted -= 1;
+            }
+            event.preventDefault();
+        }
     }
     savePokemon(pokemonForm: NgForm): void {
         const {
@@ -111,7 +134,6 @@ export class AddPokemonComponent implements OnInit {
             this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
                 if (result.ok === 1) {
                     pokemonForm.reset(resetValue);
-                    this.domesticated.getDomesticatedPokemons();
                     document.getElementById('new-pokemon').focus();
                 } else {
                     console.error('Error: something went wrong when inserting a pokemon');
@@ -124,5 +146,6 @@ export class AddPokemonComponent implements OnInit {
     addPokemonName(pokemon: string): void {
         this.model.pokemonname = pokemon;
         this.pokemonsFiltered = [];
+        this.indexSeleted = 0;
     }
 }

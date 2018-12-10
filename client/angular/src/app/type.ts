@@ -4,4 +4,5 @@ export interface PokemonType {
     inefective: string[];
     none: string[];
     efective: string[];
+    selected?: boolean;
 }

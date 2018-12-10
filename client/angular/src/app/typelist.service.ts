@@ -6,7 +6,7 @@ import { catchError, tap } from 'rxjs/operators';
 
 import { environment } from '../environments/environment';
 import { MessageService } from './message.service';
-
+import { PokemonType } from './type';
 @Injectable({
     providedIn: 'root'
 })
@@ -28,8 +28,8 @@ export class TypelistService {
             return of(result as T);
         };
     }
-    getPokemonTypes(): Observable<string[]> {
-        return this.http.get<string[]>(this.pokemonUrl)
+    getPokemonTypes(): Observable<PokemonType[]> {
+        return this.http.get<PokemonType[]>(this.pokemonUrl)
             .pipe(
                 tap(_ => this.log('fetched pokemon type')),
                 catchError(this.handleError('getPokemonTypes', []))

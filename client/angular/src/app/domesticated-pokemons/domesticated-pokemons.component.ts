@@ -3,9 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { MyPokemon } from '../mypokemon';
 import { MypokemonsService } from '../mypokemons.service';
 import { PokemonlistService } from '../pokemonlist.service';
+import { TypelistService } from '../typelist.service';
+import { PokemonType } from '../type';
 import { SingleDomesPokemonComponent } from '../single-domes-pokemon/single-domes-pokemon.component';
 
-const myArray: MyPokemon[] = [];
 
 @Component({
     providers: [SingleDomesPokemonComponent],
@@ -14,15 +15,19 @@ const myArray: MyPokemon[] = [];
     styleUrls: ['./domesticated-pokemons.component.css']
 })
 export class DomesticatedPokemonsComponent implements OnInit {
-    domesticatedList: MyPokemon[] = myArray;
-    displaySingle: any;
+    domesticatedList: MyPokemon[] = [];
+    displaySingle = false;
+    pokemon: MyPokemon;
+    typesList: PokemonType[] = [];
     constructor(
         private myPokemonService: MypokemonsService,
-        private pokemonListService: PokemonlistService
+        private pokemonListService: PokemonlistService,
+        private typeService: TypelistService
     ) { }
 
     ngOnInit() {
         this.getDomesticatedPokemons();
+        this.getTypeList();
     }
 
     getDomesticatedPokemons(): void {
@@ -38,6 +43,18 @@ export class DomesticatedPokemonsComponent implements OnInit {
     }
 
     displaySigle(pokemon: MyPokemon): void {
-        this.displaySingle = pokemon;
+        this.pokemon = pokemon;
+        this.displaySingle = true;
+    }
+    closeSingle($event): void {
+        this.displaySingle = $event;
+        this.getDomesticatedPokemons();
+    }
+    getTypeList(): void {
+        this.typeService.getPokemonTypes()
+            .subscribe(types => this.typesList = types.map((t) => {
+                t.selected = true;
+                return t;
+            }));
     }
 }

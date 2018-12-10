@@ -1,10 +1,29 @@
-<div id="pokemon-domesticated-list">
-    <ng-container *ngIf="displaySingle; then single; else many">
-    </ng-container>
-
-    <app-single-domes-pokemon #single>
-    </app-single-domes-pokemon>
-    <ng-template #many>
+<ng-container *ngIf="displaySingle; then single; else many"></ng-container>
+<ng-template #single>
+    <app-single-domes-pokemon [pokemon]="pokemon" [displaySingle]="displaySingle" (closeSingle)="closeSingle($event)"></app-single-domes-pokemon>
+</ng-template>
+<ng-template #many>
+    <div class="row">
+        <div class="form-group col-md-2">
+            <label for="sort-by">Sort By:</label>
+            <select id="sort-by" class="form-control">
+                <option value="#">#</option>
+                <option value="cp">CP</option>
+                <option value="hp">hp</option>
+                <option value="type">type</option>
+            </select>
+        </div>
+        <div class="rest">
+            <div *ngFor="let ptype of typesList" class="p-type" [ngClass]="ptype.selected ? 'p-selected' : ''">
+                <label for="{{ptype._id}}-type">
+                    <img src="assets/img/{{ptype._id}}.png" alt="{{ptype._id}}">
+                </label>
+                <input id="{{ptype._id}}-type" type="checkbox" name="pokemon-type" value="{{ptype._id}}" [checked]="ptype.selected"
+                    (change)="ptype.selected = !ptype.selected" class="hidden">
+            </div>
+        </div>
+    </div>
+    <div id="pokemon-domesticated-list">
         <div *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper">
             <button type="button" (click)="displaySigle(pokemon);">
                 <img src="assets/img/{{pokemon.pokemonid}}.png" alt="{{getPokemonName(pokemon.pokemonid)}}">
@@ -14,5 +33,5 @@
                 <p>{{getPokemonName(pokemon.pokemonid)}}</p>
             </ng-template>
         </div>
-    </ng-template>
-</div>
+    </div>
+</ng-template>
