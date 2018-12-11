@@ -1,5 +1,9 @@
 export class Pokemon {
-    _id: number;
-    name: string;
-    types: string[];
+    constructor(
+        public pokemonid: number,
+        public name: string,
+        public types: string[]
+    ) {
+
+    }
 }

@@ -19,6 +19,7 @@ export class DomesticatedPokemonsComponent implements OnInit {
     displaySingle = false;
     pokemon: MyPokemon;
     typesList: PokemonType[] = [];
+    pokemonOrder = 'cp';
     constructor(
         private myPokemonService: MypokemonsService,
         private pokemonListService: PokemonlistService,
@@ -26,29 +27,39 @@ export class DomesticatedPokemonsComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        this.getDomesticatedPokemons();
+        this.getDomesticatedPokemons(this.pokemonOrder);
         this.getTypeList();
     }
 
-    getDomesticatedPokemons(): void {
-        const that = this;
-        const observable = this.myPokemonService.getDomesticatedPokemons();
-        observable.subscribe((pokemons) => {
-            that.domesticatedList = pokemons;
+    getDomesticatedPokemons(sort: string): void {
+        this.myPokemonService.getDomesticatedPokemons(sort).subscribe((pokemons) => {
+            this.domesticatedList = pokemons;
         });
     }
-
+    hideShow(ptype) {
+        ptype.selected = !ptype.selected;
+        this.domesticatedList = this.domesticatedList.map((pokemon) => {
+            const types = this.pokemonListService.queryList(pokemon.pokemonid, 'types');
+            if (types.includes(ptype._id)) {
+                pokemon.hidden = !ptype.selected;
+            }
+            return pokemon;
+        });
+    }
     getPokemonName(pokemonid: number): string {
         return this.pokemonListService.queryList(pokemonid, 'name');
     }
-
+    changeOrder(sort: string) {
+        this.pokemonOrder = sort;
+        this.getDomesticatedPokemons(this.pokemonOrder);
+    }
     displaySigle(pokemon: MyPokemon): void {
         this.pokemon = pokemon;
         this.displaySingle = true;
     }
     closeSingle($event): void {
         this.displaySingle = $event;
-        this.getDomesticatedPokemons();
+        this.getDomesticatedPokemons(this.pokemonOrder);
     }
     getTypeList(): void {
         this.typeService.getPokemonTypes()

@@ -1,0 +1,2 @@
+ db.pokemonlist.createIndex( { "pokemonid": 1 }, { unique: true } );
+ db.pokemonlist.createIndex( { "name": 1 }, { unique: true } );

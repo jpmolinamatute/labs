@@ -6,7 +6,10 @@
         {
             "label": "Start Angular",
             "type": "shell",
-            "command": "ng serve",
+            "command": "ng",
+            "args": [
+                "serve"
+            ],
             "options": {
                 "cwd": "${workspaceRoot}/client/angular"
             },
@@ -19,8 +22,12 @@
         },
         {
             "label": "Start Server",
-            "type": "npm",
-            "script": "start",
+            "type": "shell",
+            "command": "node",
+            "args": [
+                "./node_modules/nodemon/bin/nodemon.js",
+                "./src/app.js"
+            ],
             "options": {
                 "cwd": "${workspaceRoot}/server"
             },

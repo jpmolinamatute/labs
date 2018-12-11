@@ -6,11 +6,11 @@
     <div class="row">
         <div class="form-group col-md-2">
             <label for="sort-by">Sort By:</label>
-            <select id="sort-by" class="form-control">
-                <option value="#">#</option>
-                <option value="cp">CP</option>
-                <option value="hp">hp</option>
-                <option value="type">type</option>
+            <select id="sort-by" class="form-control" (change)="changeOrder($event.target.value);">
+                <option value="pokemonid" [selected]="pokemonOrder === 'pokemonid'">#</option>
+                <option value="cp" [selected]="pokemonOrder === 'cp'">CP</option>
+                <option value="hp" [selected]="pokemonOrder === 'hp'">HP</option>
+                <option value="types" [selected]="pokemonOrder === 'types'">Type</option>
             </select>
         </div>
         <div class="rest">
@@ -19,12 +19,12 @@
                     <img src="assets/img/{{ptype._id}}.png" alt="{{ptype._id}}">
                 </label>
                 <input id="{{ptype._id}}-type" type="checkbox" name="pokemon-type" value="{{ptype._id}}" [checked]="ptype.selected"
-                    (change)="ptype.selected = !ptype.selected" class="hidden">
+                    (change)="hideShow(ptype);" class="hidden">
             </div>
         </div>
     </div>
     <div id="pokemon-domesticated-list">
-        <div *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper">
+        <div *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper" [ngClass]="pokemon.hidden ? 'hidden' : ''">
             <button type="button" (click)="displaySigle(pokemon);">
                 <img src="assets/img/{{pokemon.pokemonid}}.png" alt="{{getPokemonName(pokemon.pokemonid)}}">
             </button>

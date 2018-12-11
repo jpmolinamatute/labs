@@ -38,7 +38,9 @@ div.pokemon-stats > div:last-child{
 
 p {
     text-align: center;
+    text-transform: capitalize;
 }
+
 div.row {
     display: flex;
     flex-direction: row;

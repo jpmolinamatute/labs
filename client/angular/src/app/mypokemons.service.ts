@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
@@ -44,11 +44,17 @@ export class MypokemonsService {
             catchError(this.handleError<any>('addPokemon', 'FAILED'))
         );
     }
-    getDomesticatedPokemons(): Observable<MyPokemon[]> {
-        return this.http.get<MyPokemon[]>(this.pokemonUrl)
+    getDomesticatedPokemons(sort): Observable<MyPokemon[]> {
+        let params: HttpParams;
+        let httpOpt = {};
+        if (typeof sort === 'string' && sort.length > 0) {
+            params = new HttpParams().set('sort', sort);
+            httpOpt = { params };
+        }
+
+        return this.http.get<MyPokemon[]>(this.pokemonUrl, httpOpt)
             .pipe(
                 tap(_ => this.log('fetched my pokemons')),
-
                 catchError(this.handleError('getAllPokemons', []))
             );
     }

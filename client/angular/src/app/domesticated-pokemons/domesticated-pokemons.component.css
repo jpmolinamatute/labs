@@ -30,7 +30,7 @@ div.row > div.rest{
     padding-top: 15px;
 }
 
-input.hidden{
+.hidden{
     opacity: 0;
     display: none;
 }

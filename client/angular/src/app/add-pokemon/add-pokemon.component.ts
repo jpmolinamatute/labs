@@ -110,26 +110,31 @@ export class AddPokemonComponent implements OnInit {
             pokemonname
         } = pokemonForm.control.value;
 
-        const fastattack = {
-            type: fastattacktype,
-            damage: +fastattackdamage,
-            name: filterName(fastattackname)
-        };
-        const chargedattack = {
-            type: chargedattacktype,
-            damage: +chargedattackdamage,
-            name: filterName(chargedattackname)
-        };
-        const name = filterName(nickname);
+
         const pokemonid = this.pokemonService.getPokemonId(pokemonname);
         if (typeof pokemonid === 'number') {
+            const types = this.pokemonService.queryList(pokemonid, 'types');
+            const name = this.pokemonService.queryList(pokemonid, 'name');
+            const fastattack = {
+                type: fastattacktype,
+                damage: +fastattackdamage,
+                name: filterName(fastattackname)
+            };
+            const chargedattack = {
+                type: chargedattacktype,
+                damage: +chargedattackdamage,
+                name: filterName(chargedattackname)
+            };
+            const nickNameFiltered = filterName(nickname);
             const pokemon = new MyPokemon(
                 pokemonid,
                 cp,
                 hp,
                 fastattack,
                 chargedattack,
-                name
+                types,
+                name,
+                nickNameFiltered
             );
             this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
                 if (result.ok === 1) {

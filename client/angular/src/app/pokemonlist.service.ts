@@ -37,7 +37,7 @@ export class PokemonlistService {
         let info;
         this.list.forEach((item) => {
             if (item.name === name) {
-                info = item._id;
+                info = item.pokemonid;
             }
         });
         return info;
@@ -45,7 +45,7 @@ export class PokemonlistService {
     queryList(pokemonid: number, field: string, regex?: boolean) {
         let info;
         this.list.forEach((item) => {
-            if (item._id === pokemonid) {
+            if (item.pokemonid === pokemonid) {
                 info = item[field];
             }
         });

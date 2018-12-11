@@ -16,16 +16,16 @@ export class SingleDomesPokemonComponent implements OnInit {
 
     ngOnInit() {
     }
-    getPokemonType(pokemonid: number): string[] {
-        return this.pokemonListService.queryList(pokemonid, 'types');
-    }
+    // getPokemonType(pokemonid: number): string[] {
+    //     return this.pokemonListService.queryList(pokemonid, 'types');
+    // }
     edit(pokemon: MyPokemon): void {
         console.log(pokemon);
 
     }
-    getPokemonName(pokemonid: number): string {
-        return this.pokemonListService.queryList(pokemonid, 'name');
-    }
+    // getPokemonName(pokemonid: number): string {
+    //     return this.pokemonListService.queryList(pokemonid, 'name');
+    // }
     del(pokemon: MyPokemon): void {
         this.myPokemonService.removePokemon(pokemon._id)
             .subscribe(() => {

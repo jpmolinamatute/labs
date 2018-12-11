@@ -107,7 +107,13 @@ app.post('/api/mypokemons', (req, res) => {
 });
 
 app.get('/api/mypokemons', (req, res) => {
-    const result = query('domesticatedPokemon', {}, {}, { cp: -1 });
+    let sort = { cp: -1 };
+    if (typeof req.query.sort === 'string') {
+        sort = {};
+        sort[req.query.sort] = -1;
+    }
+
+    const result = query('domesticatedPokemon', {}, {}, sort);
     result.then((doc) => {
         res.send(doc);
     });
