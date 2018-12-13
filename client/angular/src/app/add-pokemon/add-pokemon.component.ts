@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 
-import { PokemonlistService } from '../pokemonlist.service';
-import { TypelistService } from '../typelist.service';
-import { PokemonType } from '../type';
-import { MypokemonsService } from '../mypokemons.service';
-import { Pokemon } from '../pokemon';
-import { MyPokemon } from '../mypokemon';
+import { PokemonlistService } from '../services/pokemonlist.service';
+import { TypelistService } from '../services/typelist.service';
+import { PokemonType } from '../classes/type';
+import { MypokemonsService } from '../services/mypokemons.service';
+import { MyPokemon } from '../classes/mypokemon';
+import { ServiceStatus } from '../classes/serviceStatus';
 
 interface PokemonFiler {
-    name: string;
+    name: string
     index: number;
 }
 const resetValue = {
@@ -30,7 +30,7 @@ function filterName(str) {
     styleUrls: ['./add-pokemon.component.css']
 })
 export class AddPokemonComponent implements OnInit {
-    pokemonsList: Pokemon[];
+    pokemonsList: string[] = [];
     typesList: PokemonType[];
     pokemonsFiltered: PokemonFiler[] = [];
     indexSeleted = 0;
@@ -51,16 +51,27 @@ export class AddPokemonComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        this.getPokemonsList();
-        this.getTypeList();
+        const pokemonSubscriber = this.pokemonService.init();
+        pokemonSubscriber.subscribe((status) => {
+            if (status.ready) {
+                this.getPokemonsList();
+            }
+        });
+
+        const typeSubscriber = this.typeService.init();
+        console.log('AddPokemonComponent.ngOnInit()');
+        typeSubscriber.subscribe((status: ServiceStatus) => {
+            console.log('AddPokemonComponent.ngOnInit() data changed ', status);
+            if (status.status === 'ready') {
+                this.getTypeList();
+            }
+        });
     }
     getPokemonsList(): void {
-        this.pokemonService.getAllPokemons()
-            .subscribe(pokemons => this.pokemonsList = pokemons);
+        this.pokemonsList = this.pokemonService.getAllPokemonsName();
     }
     getTypeList(): void {
-        this.typeService.getPokemonTypes()
-            .subscribe(types => this.typesList = types);
+        this.typesList = this.typeService.getPokemonTypes();
     }
     onKey(event: any): void {
         const regexLETTER = /Key[ABCDEFGHIJKLMNOPQRSTUVWXYZ]/;
@@ -74,10 +85,10 @@ export class AddPokemonComponent implements OnInit {
                 this.pokemonsFiltered = [];
                 const re = new RegExp(name);
                 let index = 0;
-                this.pokemonsList.forEach((pokemon) => {
-                    if (re.test(pokemon.name)) {
+                this.pokemonsList.forEach((pokemonname) => {
+                    if (re.test(pokemonname)) {
                         this.pokemonsFiltered.push({
-                            name: pokemon.name,
+                            name: pokemonname,
                             index
                         });
                         index += 1;
@@ -106,36 +117,30 @@ export class AddPokemonComponent implements OnInit {
             fastattackdamage,
             fastattackname,
             fastattacktype,
-            nickname,
+            rawnickname,
             pokemonname
         } = pokemonForm.control.value;
 
+        const pokemonData = this.pokemonService.getPokemonByName(pokemonname);
 
-        const pokemonid = this.pokemonService.getPokemonId(pokemonname);
-        if (typeof pokemonid === 'number') {
-            const types = this.pokemonService.queryList(pokemonid, 'types');
-            const name = this.pokemonService.queryList(pokemonid, 'name');
-            const fastattack = {
-                type: fastattacktype,
-                damage: +fastattackdamage,
-                name: filterName(fastattackname)
+        if (typeof pokemonData === 'object') {
+            const pokemon: MyPokemon = {
+                pokemonid: pokemonData.pokemonid,
+                cp: +cp,
+                hp: +hp,
+                fastattack: {
+                    type: fastattacktype,
+                    damage: +fastattackdamage,
+                    name: filterName(fastattackname)
+                },
+                chargedattack: {
+                    type: chargedattacktype,
+                    damage: +chargedattackdamage,
+                    name: filterName(chargedattackname)
+                },
+                nickname: filterName(rawnickname)
             };
-            const chargedattack = {
-                type: chargedattacktype,
-                damage: +chargedattackdamage,
-                name: filterName(chargedattackname)
-            };
-            const nickNameFiltered = filterName(nickname);
-            const pokemon = new MyPokemon(
-                pokemonid,
-                cp,
-                hp,
-                fastattack,
-                chargedattack,
-                types,
-                name,
-                nickNameFiltered
-            );
+
             this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
                 if (result.ok === 1) {
                     pokemonForm.reset(resetValue);

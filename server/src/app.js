@@ -37,6 +37,34 @@ const del = async (collectionName, queryField) => {
     return response;
 };
 
+
+function mergePokemonData(pokemons, myPokemons, callback) {
+    const merged = [];
+    myPokemons.forEach((my) => {
+        pokemons.forEach((pokemon) => {
+            if (my.pokemonid === pokemon.pokemonid) {
+                const data = Object.assign(my, pokemon);
+                merged.push(data);
+            }
+        });
+    });
+    callback.send(merged);
+}
+
+function processDomesticated(result1, callback) {
+    const pokemonsIDs = [];
+    result1.forEach((pokemon) => {
+        if (!pokemonsIDs.includes(pokemon.pokemonid)) {
+            pokemonsIDs.push(pokemon.pokemonid);
+        }
+    });
+    const queryDomesticaed = { pokemonid: { $in: pokemonsIDs } };
+    const result2 = query('pokemonlist', queryDomesticaed, {}, {});
+    result2.then((doc) => {
+        mergePokemonData(doc, result1, callback);
+    });
+}
+
 // async function getpokemonTeam(against) {
 //     let team = null;
 
@@ -86,7 +114,7 @@ app.use(cors());
 
 
 app.get('/api/allpokemons', (req, res) => {
-    const result = query('pokemonlist', {}, { _id: 1, name: 1, types: 1 }, { name: 1 });
+    const result = query('pokemonlist', {}, {}, { name: 1 });
     result.then((r) => {
         res.send(r);
     });
@@ -106,6 +134,7 @@ app.post('/api/mypokemons', (req, res) => {
     });
 });
 
+
 app.get('/api/mypokemons', (req, res) => {
     let sort = { cp: -1 };
     if (typeof req.query.sort === 'string') {
@@ -115,7 +144,11 @@ app.get('/api/mypokemons', (req, res) => {
 
     const result = query('domesticatedPokemon', {}, {}, sort);
     result.then((doc) => {
-        res.send(doc);
+        if (Array.isArray(doc) && doc.length > 0) {
+            processDomesticated(doc, res);
+        } else {
+            res.send([]);
+        }
     });
 });
 

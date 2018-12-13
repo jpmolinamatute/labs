@@ -24,3 +24,8 @@ button.btn-light{
     height: 100%;
     text-align: left;
 }
+div#loading{
+    max-width: 700px;
+    height: 600px;
+    background-color: red;
+}

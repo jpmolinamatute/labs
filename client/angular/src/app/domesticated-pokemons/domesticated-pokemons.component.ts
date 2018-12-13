@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 
-import { MyPokemon } from '../mypokemon';
-import { MypokemonsService } from '../mypokemons.service';
-import { PokemonlistService } from '../pokemonlist.service';
-import { TypelistService } from '../typelist.service';
-import { PokemonType } from '../type';
+import { MyPokemon } from '../classes/mypokemon';
+import { MypokemonsService } from '../services/mypokemons.service';
+import { TypelistService } from '../services/typelist.service';
+import { PokemonType } from '../classes/type';
 import { SingleDomesPokemonComponent } from '../single-domes-pokemon/single-domes-pokemon.component';
-
+import { ServiceStatus } from '../classes/serviceStatus';
 
 @Component({
     providers: [SingleDomesPokemonComponent],
@@ -22,13 +21,19 @@ export class DomesticatedPokemonsComponent implements OnInit {
     pokemonOrder = 'cp';
     constructor(
         private myPokemonService: MypokemonsService,
-        private pokemonListService: PokemonlistService,
         private typeService: TypelistService
     ) { }
 
     ngOnInit() {
         this.getDomesticatedPokemons(this.pokemonOrder);
-        this.getTypeList();
+        const typeSubscriber = this.typeService.init();
+        console.log('DomesticatedPokemonsComponent.ngOnInit()');
+        typeSubscriber.subscribe((status: ServiceStatus) => {
+            console.log('DomesticatedPokemonsComponent.ngOnInit() data changed ', status);
+            if (status.status === 'ready') {
+                this.getTypeList();
+            }
+        });
     }
 
     getDomesticatedPokemons(sort: string): void {
@@ -39,15 +44,11 @@ export class DomesticatedPokemonsComponent implements OnInit {
     hideShow(ptype) {
         ptype.selected = !ptype.selected;
         this.domesticatedList = this.domesticatedList.map((pokemon) => {
-            const types = this.pokemonListService.queryList(pokemon.pokemonid, 'types');
-            if (types.includes(ptype._id)) {
+            if (pokemon.types.includes(ptype._id)) {
                 pokemon.hidden = !ptype.selected;
             }
             return pokemon;
         });
-    }
-    getPokemonName(pokemonid: number): string {
-        return this.pokemonListService.queryList(pokemonid, 'name');
     }
     changeOrder(sort: string) {
         this.pokemonOrder = sort;
@@ -62,10 +63,10 @@ export class DomesticatedPokemonsComponent implements OnInit {
         this.getDomesticatedPokemons(this.pokemonOrder);
     }
     getTypeList(): void {
-        this.typeService.getPokemonTypes()
-            .subscribe(types => this.typesList = types.map((t) => {
-                t.selected = true;
-                return t;
-            }));
+        const types = this.typeService.getPokemonTypes();
+        this.typesList = types.map((t) => {
+            t.selected = true;
+            return t;
+        });
     }
 }

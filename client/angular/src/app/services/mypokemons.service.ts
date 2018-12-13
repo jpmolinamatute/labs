@@ -3,8 +3,8 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-import { MyPokemon } from './mypokemon';
-import { environment } from '../environments/environment';
+import { MyPokemon } from '../classes/mypokemon';
+import { environment } from '../../environments/environment';
 import { MessageService } from './message.service';
 
 const httpOptions = {

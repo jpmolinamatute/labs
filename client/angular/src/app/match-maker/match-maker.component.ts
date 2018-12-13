@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
-import { POKEMON } from '../mock-pokemon';
+
 
 @Component({
     selector: 'app-match-maker',
@@ -10,7 +10,7 @@ import { POKEMON } from '../mock-pokemon';
 })
 
 export class MatchMakerComponent implements OnInit {
-    list = POKEMON;
+    list = []; // @FIXME: this should be a list of ALL pokemons
     idSelected: number[] = [];
     constructor(private _sanitizer: DomSanitizer) { }
 

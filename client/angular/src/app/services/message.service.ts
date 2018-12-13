@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LogMsg } from './logMsg';
+import { LogMsg } from '../classes/logMsg';
 @Injectable({
     providedIn: 'root',
 })
