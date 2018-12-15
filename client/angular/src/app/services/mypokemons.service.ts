@@ -18,8 +18,7 @@ const httpOptions = {
     providedIn: 'root'
 })
 export class MypokemonsService {
-
-    private pokemonUrl = `${environment.myEndpoint}/api/mypokemons`;  // URL to web api
+    private readonly baseURL = `${environment.myEndpoint}/api/mypokemons`;  // URL to web api
     constructor(private http: HttpClient, private messageService: MessageService) { }
     private log(message: string) {
         this.messageService.add(`MypokemonsService: ${message}`);
@@ -39,12 +38,12 @@ export class MypokemonsService {
     }
 
     addPokemon(pokemon: MyPokemon): Observable<any> {
-        return this.http.post<any>(this.pokemonUrl, pokemon, httpOptions).pipe(
+        return this.http.post<any>(this.baseURL, pokemon, httpOptions).pipe(
             tap((pokemonTapId) => this.log(`pokemon added w/ id=${pokemonTapId}`)),
             catchError(this.handleError<any>('addPokemon', 'FAILED'))
         );
     }
-    getDomesticatedPokemons(sort): Observable<MyPokemon[]> {
+    getDomesticatedPokemons(sort: string): Observable<MyPokemon[]> {
         let params: HttpParams;
         let httpOpt = {};
         if (typeof sort === 'string' && sort.length > 0) {
@@ -52,7 +51,7 @@ export class MypokemonsService {
             httpOpt = { params };
         }
 
-        return this.http.get<MyPokemon[]>(this.pokemonUrl, httpOpt)
+        return this.http.get<MyPokemon[]>(this.baseURL, httpOpt)
             .pipe(
                 tap(_ => this.log('fetched my pokemons')),
                 catchError(this.handleError('getAllPokemons', []))
@@ -60,13 +59,14 @@ export class MypokemonsService {
     }
     removePokemon(_id: string): Observable<any> {
         const opt = {
-            body: { _id },
+            params: new HttpParams().set('_id', _id),
             headers: new HttpHeaders({
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': environment.myEndpoint
             })
         };
-        return this.http.delete<any>(this.pokemonUrl, opt).pipe(
+
+        return this.http.delete<any>(this.baseURL, opt).pipe(
             tap((response) => this.log(`pokemon deleted w/ _id=${_id}`)),
             catchError(this.handleError<any>('addPokemon', 'FAILED'))
         );

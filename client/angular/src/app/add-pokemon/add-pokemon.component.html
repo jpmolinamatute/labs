@@ -3,7 +3,7 @@
         <div class="form-group col-md-4">
             <label for="new-pokemon">Pokemon</label>
             <input type="text" id="new-pokemon" class="form-control" [(ngModel)]="model.pokemonname" name="pokemonname"
-                tabindex="1" (keyup)="onKey($event);" (keydown)="selectPokemon($event);" required>
+                tabindex="1" (keyup)="onKey($event);" (keydown)="selectPokemon($event);" (blur)="resetName();" required>
             <ul *ngIf="pokemonsFiltered.length > 0">
                 <li *ngFor="let pokemon of pokemonsFiltered" [class.active]="indexSeleted === pokemon.index">
                     <button type="button" (click)="addPokemonName(pokemon.name);" class="btn btn-sm btn-light">

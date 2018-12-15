@@ -3,35 +3,30 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Pokemon } from '../classes/pokemon';
 import { Observable } from 'rxjs';
-
-interface IsReady {
-    ready: boolean;
-}
+import { ServiceStatus } from '../classes/serviceStatus';
 
 
 @Injectable({
     providedIn: 'root'
 })
 export class PokemonlistService {
-    private pokemonUrl = `${environment.myEndpoint}/api/allpokemons`;
+    private readonly baseURL = `${environment.myEndpoint}/api/allpokemons`;
     private list: Pokemon[] = [];
-    constructor(private http: HttpClient) { }
+    private iSeeYou: Observable<ServiceStatus>;
 
-    init(): Observable<IsReady> {
-        return new Observable((observer) => {
-            if (this.list.length === 0) {
-                observer.next({ ready: false });
-
-                this.http.get<Pokemon[]>(this.pokemonUrl).subscribe((data) => {
-                    this.list = data;
-                    observer.next({ ready: true });
-                    observer.complete();
-
-                });
-            } else {
-                observer.next({ ready: true });
-            }
+    constructor(private http: HttpClient) {
+        this.iSeeYou = new Observable((observer) => {
+            observer.next({ status: 'calling' });
+            this.http.get(this.baseURL).subscribe((data: Pokemon[]) => {
+                this.list = data;
+                observer.next({ status: 'ready' });
+                observer.complete();
+            });
         });
+    }
+
+    init(): Observable<ServiceStatus> {
+        return this.iSeeYou;
     }
 
     getPokemonById(id: number): Pokemon {

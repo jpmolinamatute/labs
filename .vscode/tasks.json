@@ -22,8 +22,8 @@
         },
         {
             "label": "Start Server",
-            "type": "shell",
-            "command": "node",
+            "type": "process",
+            "command": "/usr/bin/node",
             "args": [
                 "./node_modules/nodemon/bin/nodemon.js",
                 "./src/app.js"

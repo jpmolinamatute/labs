@@ -53,15 +53,13 @@ export class AddPokemonComponent implements OnInit {
     ngOnInit() {
         const pokemonSubscriber = this.pokemonService.init();
         pokemonSubscriber.subscribe((status) => {
-            if (status.ready) {
+            if (status.status === 'ready') {
                 this.getPokemonsList();
             }
         });
 
         const typeSubscriber = this.typeService.init();
-        console.log('AddPokemonComponent.ngOnInit()');
         typeSubscriber.subscribe((status: ServiceStatus) => {
-            console.log('AddPokemonComponent.ngOnInit() data changed ', status);
             if (status.status === 'ready') {
                 this.getTypeList();
             }
@@ -82,7 +80,7 @@ export class AddPokemonComponent implements OnInit {
         } else if (regexLETTER.test(event.code)) {
             const name = filterName(event.target.value);
             if (typeof name === 'string' && name.length > 2) {
-                this.pokemonsFiltered = [];
+                this.resetName();
                 const re = new RegExp(name);
                 let index = 0;
                 this.pokemonsList.forEach((pokemonname) => {
@@ -97,7 +95,7 @@ export class AddPokemonComponent implements OnInit {
             }
         }
     }
-    selectPokemon(event) {
+    selectPokemon(event: any) {
         if (event.code === 'ArrowDown' || event.code === 'ArrowUp') {
             if (event.code === 'ArrowDown' && this.indexSeleted < this.pokemonsFiltered.length - 1) {
                 this.indexSeleted += 1;
@@ -106,6 +104,11 @@ export class AddPokemonComponent implements OnInit {
             }
             event.preventDefault();
         }
+    }
+    resetName() {
+        this.pokemonsFiltered = [];
+        this.indexSeleted = 0;
+
     }
     savePokemon(pokemonForm: NgForm): void {
         const {
@@ -155,7 +158,6 @@ export class AddPokemonComponent implements OnInit {
 
     addPokemonName(pokemon: string): void {
         this.model.pokemonname = pokemon;
-        this.pokemonsFiltered = [];
-        this.indexSeleted = 0;
+        this.resetName();
     }
 }

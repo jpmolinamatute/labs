@@ -41,9 +41,11 @@ const del = async (collectionName, queryField) => {
 function mergePokemonData(pokemons, myPokemons, callback) {
     const merged = [];
     myPokemons.forEach((my) => {
+        const _id = my._id.toString();
         pokemons.forEach((pokemon) => {
             if (my.pokemonid === pokemon.pokemonid) {
                 const data = Object.assign(my, pokemon);
+                data._id = _id;
                 merged.push(data);
             }
         });
@@ -153,11 +155,15 @@ app.get('/api/mypokemons', (req, res) => {
 });
 
 app.delete('/api/mypokemons', (req, res) => {
-    if (typeof req.body === 'object' && typeof req.body._id === 'string') {
-        const _id = { _id: new ObjectID.createFromHexString(req.body._id) };
+    if (typeof req.query._id === 'string') {
+        const _id = { _id: new ObjectID.createFromHexString(req.query._id) };
         const response = del('domesticatedPokemon', _id);
-        response.then(() => {
-            res.send({ status: 'OK' });
+        response.then((r) => {
+            if (r.deletedCount === 0) {
+                res.send({ status: 'INVALID' });
+            } else {
+                res.send({ status: 'OK' });
+            }
         });
     } else {
         res.send({ status: 'INVALID' });

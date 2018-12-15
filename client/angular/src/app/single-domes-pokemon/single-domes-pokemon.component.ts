@@ -23,8 +23,10 @@ export class SingleDomesPokemonComponent implements OnInit {
 
     del(pokemon: MyPokemon): void {
         this.myPokemonService.removePokemon(pokemon._id)
-            .subscribe(() => {
-                this.closeSingle.emit(false);
+            .subscribe((response) => {
+                if (response.status === 'OK') {
+                    this.closeSingle.emit(false);
+                }
             });
     }
     close() {

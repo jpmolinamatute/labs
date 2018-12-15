@@ -27,9 +27,7 @@ export class DomesticatedPokemonsComponent implements OnInit {
     ngOnInit() {
         this.getDomesticatedPokemons(this.pokemonOrder);
         const typeSubscriber = this.typeService.init();
-        console.log('DomesticatedPokemonsComponent.ngOnInit()');
         typeSubscriber.subscribe((status: ServiceStatus) => {
-            console.log('DomesticatedPokemonsComponent.ngOnInit() data changed ', status);
             if (status.status === 'ready') {
                 this.getTypeList();
             }
