@@ -1,0 +1,26 @@
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>CP</th>
+            <th>HP</th>
+            <th colspan="3">Fast Attack</th>
+            <th colspan="3">Charged Attack</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper" [ngClass]="pokemon.hidden ? 'hidden' : ''">
+            <td>{{pokemon.pokemonid}}</td>
+            <td>{{pokemon.name}}</td>
+            <td>{{pokemon.cp}}</td>
+            <td>{{pokemon.hp}}</td>
+            <td>{{pokemon.fastattack.type}}</td>
+            <td>{{pokemon.fastattack.name}}</td>
+            <td>{{pokemon.fastattack.damage}}</td>
+            <td>{{pokemon.chargedattack.type}}</td>
+            <td>{{pokemon.chargedattack.name}}</td>
+            <td>{{pokemon.chargedattack.damage}}</td>
+        </tr>
+    </tbody>
+</table>

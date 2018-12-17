@@ -35,9 +35,9 @@
 <!-- Detail -->
 <ng-container *ngIf="displaySummary; then summary; else detail"></ng-container>
 <ng-template #summary>
-    <app-domesticated-pokemons [pokemonOrder]="pokemonOrder" [domesticatedList]="domesticatedList">
-    </app-domesticated-pokemons>
+    <app-domesticated-summary [domesticatedList]="domesticatedList"></app-domesticated-summary>
 </ng-template>
+
 <ng-template #detail>
-    <p>Hola?</p>
+    <app-domesticated-detail [domesticatedList]="domesticatedList"></app-domesticated-detail>
 </ng-template>

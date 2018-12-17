@@ -5,22 +5,22 @@ import { FormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { MatchMakerComponent } from './match-maker/match-maker.component';
 import { AddPokemonComponent } from './add-pokemon/add-pokemon.component';
-import { DomesticatedPokemonsComponent } from './domesticated-pokemons/domesticated-pokemons.component';
+import { DomesticatedSummaryComponent } from './domesticated-summary/domesticated-summary.component';
+import { DomesticatedDetailComponent } from './domesticated-detail/domesticated-detail.component';
 import { SingleDomesPokemonComponent } from './single-domes-pokemon/single-domes-pokemon.component';
 import { PokemonlistService } from './services/pokemonlist.service';
 import { TypelistService } from './services/typelist.service';
 import { DisplayDomesticatedComponent } from './display-domesticated/display-domesticated.component';
-import { DetailDomesticatedComponent } from './detail-domesticated/detail-domesticated.component';
 
 @NgModule({
     declarations: [
         AppComponent,
         MatchMakerComponent,
         AddPokemonComponent,
-        DomesticatedPokemonsComponent,
+        DomesticatedSummaryComponent,
         SingleDomesPokemonComponent,
         DisplayDomesticatedComponent,
-        DetailDomesticatedComponent
+        DomesticatedDetailComponent
     ],
     imports: [
         BrowserModule,

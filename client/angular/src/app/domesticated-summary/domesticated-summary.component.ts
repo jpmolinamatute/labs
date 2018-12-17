@@ -6,15 +6,14 @@ import { SingleDomesPokemonComponent } from '../single-domes-pokemon/single-dome
 
 @Component({
     providers: [SingleDomesPokemonComponent],
-    selector: 'app-domesticated-pokemons',
-    templateUrl: './domesticated-pokemons.component.html',
-    styleUrls: ['./domesticated-pokemons.component.css']
+    selector: 'app-domesticated-summary',
+    templateUrl: './domesticated-summary.component.html',
+    styleUrls: ['./domesticated-summary.component.css']
 })
-export class DomesticatedPokemonsComponent implements OnInit {
+export class DomesticatedSummaryComponent implements OnInit {
 
     displaySingle = false;
     pokemon: MyPokemon;
-    @Input() pokemonOrder: string;
     @Input() domesticatedList: MyPokemon[]
 
     constructor() { }
