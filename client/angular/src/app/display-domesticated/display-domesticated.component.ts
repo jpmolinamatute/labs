@@ -15,7 +15,7 @@ export class DisplayDomesticatedComponent implements OnInit {
     typesList: PokemonType[] = [];
     pokemonOrder = 'cp';
     newEditTemplate = 'none';
-    displaySummary = true;
+    displaySummary = false;
 
     constructor(
         private myPokemonService: MypokemonsService,

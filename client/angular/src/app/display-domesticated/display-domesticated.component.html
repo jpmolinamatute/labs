@@ -1,43 +1,45 @@
 <div id="wizard" [ngStyle]="{'display': newEditTemplate}">
     <app-add-pokemon></app-add-pokemon>
 </div>
-
-<div class="row">
-    <div class="form-group col-md-1">
-        <label for="sort-by">Sort By:</label>
-        <select id="sort-by" class="form-control" (change)="changeOrder($event.target.value);">
-            <option value="pokemonid" [selected]="pokemonOrder === 'pokemonid'">#</option>
-            <option value="cp" [selected]="pokemonOrder === 'cp'">CP</option>
-            <option value="hp" [selected]="pokemonOrder === 'hp'">HP</option>
-            <option value="types" [selected]="pokemonOrder === 'types'">Type</option>
-        </select>
-    </div>
-    <div class="col-md-1">
-        <button type="button" class="btn" (click)="newEditTemplate = newEditTemplate === 'none' ? 'block' : 'none'">New</button>
-    </div>
-    <div class="col-md-1">
-        <label class="switch">
-            <input type="checkbox" (change)="displaySummary = !displaySummary">
-            <span class="slider round"></span>
-        </label>
-    </div>
-    <div class="rest">
-        <div *ngFor="let ptype of typesList" class="p-type" [ngClass]="ptype.selected ? 'p-selected' : ''">
-            <label for="{{ptype._id}}-type">
-                <img src="assets/img/{{ptype._id}}.png" alt="{{ptype._id}}">
+<div id="display-wrapper">
+    <div id="controls">
+        <div class="form-group col-md-1">
+            <label for="sort-by">Sort By:</label>
+            <select id="sort-by" class="form-control" (change)="changeOrder($event.target.value);">
+                <option value="pokemonid" [selected]="pokemonOrder === 'pokemonid'">#</option>
+                <option value="cp" [selected]="pokemonOrder === 'cp'">CP</option>
+                <option value="hp" [selected]="pokemonOrder === 'hp'">HP</option>
+                <option value="types" [selected]="pokemonOrder === 'types'">Type</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn" (click)="newEditTemplate = newEditTemplate === 'none' ? 'block' : 'none'">New</button>
+        </div>
+        <div class="col-md-1">
+            <label class="switch">
+                <input type="checkbox" (change)="displaySummary = !displaySummary" [checked]="displaySummary">
+                <span class="slider round"></span>
             </label>
-            <input id="{{ptype._id}}-type" type="checkbox" name="pokemon-type" value="{{ptype._id}}" [checked]="ptype.selected"
-                (change)="hideShow(ptype);" class="hidden">
+        </div>
+        <div class="rest">
+            <div *ngFor="let ptype of typesList" class="p-type" [ngClass]="ptype.selected ? 'p-selected' : ''">
+                <label for="{{ptype._id}}-type">
+                    <img src="assets/img/{{ptype._id}}.png" alt="{{ptype._id}}">
+                </label>
+                <input id="{{ptype._id}}-type" type="checkbox" name="pokemon-type" value="{{ptype._id}}" [checked]="ptype.selected"
+                    (change)="hideShow(ptype);" class="hidden">
+            </div>
         </div>
     </div>
+
+    <div id="content">
+        <ng-container *ngIf="displaySummary; then summary; else detail"></ng-container>
+        <ng-template #summary>
+            <app-domesticated-summary [domesticatedList]="domesticatedList"></app-domesticated-summary>
+        </ng-template>
+
+        <ng-template #detail>
+            <app-domesticated-detail [domesticatedList]="domesticatedList"></app-domesticated-detail>
+        </ng-template>
+    </div>
 </div>
-
-<!-- Detail -->
-<ng-container *ngIf="displaySummary; then summary; else detail"></ng-container>
-<ng-template #summary>
-    <app-domesticated-summary [domesticatedList]="domesticatedList"></app-domesticated-summary>
-</ng-template>
-
-<ng-template #detail>
-    <app-domesticated-detail [domesticatedList]="domesticatedList"></app-domesticated-detail>
-</ng-template>

@@ -6,7 +6,5 @@ import { PokemonlistService } from './services/pokemonlist.service';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-    constructor(private pservice: PokemonlistService) {
-
-    }
+    constructor() { }
 }
