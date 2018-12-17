@@ -9,6 +9,8 @@ import { DomesticatedPokemonsComponent } from './domesticated-pokemons/domestica
 import { SingleDomesPokemonComponent } from './single-domes-pokemon/single-domes-pokemon.component';
 import { PokemonlistService } from './services/pokemonlist.service';
 import { TypelistService } from './services/typelist.service';
+import { DisplayDomesticatedComponent } from './display-domesticated/display-domesticated.component';
+import { DetailDomesticatedComponent } from './detail-domesticated/detail-domesticated.component';
 
 @NgModule({
     declarations: [
@@ -16,7 +18,9 @@ import { TypelistService } from './services/typelist.service';
         MatchMakerComponent,
         AddPokemonComponent,
         DomesticatedPokemonsComponent,
-        SingleDomesPokemonComponent
+        SingleDomesPokemonComponent,
+        DisplayDomesticatedComponent,
+        DetailDomesticatedComponent
     ],
     imports: [
         BrowserModule,

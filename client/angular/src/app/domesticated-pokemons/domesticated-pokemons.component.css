@@ -19,33 +19,7 @@ div.pokemon-wrapper > p{
     text-transform: capitalize;
 }
 
-
-div.row > div.col-md-2{
-    order: 1;
-}
-
-div.row > div.rest{
-    order: 2;
-    flex-grow: 1;
-    padding-top: 15px;
-}
-
 .hidden{
     opacity: 0;
     display: none;
-}
-
-div.p-type{
-    border: 2px transparent solid;
-    display: inline-block;
-    margin-right: 5px; 
-}
-
-div.p-selected{
-    border: 2px black solid;
-}
-
-div.p-type img {
-    width: 38px;
-    height: 38px;
 }
