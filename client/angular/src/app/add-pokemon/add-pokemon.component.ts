@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { NgForm } from '@angular/forms';
 
 import { PokemonlistService } from '../services/pokemonlist.service';
@@ -36,15 +36,7 @@ export class AddPokemonComponent implements OnInit {
     typesList: PokemonType[];
     pokemonsFiltered: PokemonFiler[] = [];
     indexSeleted = 0;
-    model = {
-        pokemonname: '',
-        chargedattack: {
-            type: 'none'
-        },
-        fastattack: {
-            type: 'none'
-        }
-    };
+    @Input() model: MyPokemon;
 
     constructor(
         private pokemonService: PokemonlistService,
@@ -159,7 +151,7 @@ export class AddPokemonComponent implements OnInit {
     }
 
     addPokemonName(pokemon: string): void {
-        this.model.pokemonname = pokemon;
+        this.model.name = pokemon;
         this.resetName();
     }
 }

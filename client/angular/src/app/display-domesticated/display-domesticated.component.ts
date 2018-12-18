@@ -15,8 +15,21 @@ export class DisplayDomesticatedComponent implements OnInit {
     typesList: PokemonType[] = [];
     pokemonOrder = 'cp';
     newEditTemplate = 'none';
-    displaySummary = true;
-
+    displaySummary = false;
+    model: MyPokemon = {
+        name: '',
+        hp: 0,
+        cp: 0,
+        pokemonid: 0,
+        chargedattack: {
+            type: 'none',
+            damage: 0
+        },
+        fastattack: {
+            type: 'none',
+            damage: 0
+        }
+    };
     constructor(
         private myPokemonService: MypokemonsService,
         private typeService: TypelistService
@@ -62,5 +75,9 @@ export class DisplayDomesticatedComponent implements OnInit {
         if (response.status === 'done') {
             this.getDomesticatedPokemons(this.pokemonOrder);
         }
+    }
+    edit(pokemon: MyPokemon) {
+        this.model = pokemon;
+        this.newEditTemplate = 'block';
     }
 }

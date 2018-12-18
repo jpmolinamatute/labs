@@ -11,6 +11,7 @@ import { ServiceStatus } from '../classes/serviceStatus';
 export class DomesticatedDetailComponent implements OnInit {
     @Input() domesticatedList: MyPokemon[];
     @Output() onDone = new EventEmitter<ServiceStatus>();
+    @Output() editPokemon = new EventEmitter<MyPokemon>();
 
     constructor(private myPokemonService: MypokemonsService) { }
 
@@ -18,7 +19,7 @@ export class DomesticatedDetailComponent implements OnInit {
     }
 
     edit(pokemon: MyPokemon) {
-
+        this.editPokemon.emit(pokemon);
     }
 
     del(pokemon: MyPokemon) {

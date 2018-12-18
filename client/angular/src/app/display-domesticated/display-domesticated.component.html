@@ -1,5 +1,5 @@
 <div id="wizard" [ngStyle]="{'display': newEditTemplate}">
-    <app-add-pokemon></app-add-pokemon>
+    <app-add-pokemon [model]="model"></app-add-pokemon>
 </div>
 <div id="display-wrapper">
     <div id="controls">
@@ -35,13 +35,14 @@
     <div id="content">
         <ng-container *ngIf="displaySummary; then summary; else detail"></ng-container>
         <ng-template #summary>
-            <app-domesticated-summary [domesticatedList]="domesticatedList" (onDone)="updateList($event);">
+            <app-domesticated-summary [domesticatedList]="domesticatedList" (onDone)="updateList($event);"
+                (editPokemon)="edit($event);">
 
             </app-domesticated-summary>
         </ng-template>
 
         <ng-template #detail>
-            <app-domesticated-detail [domesticatedList]="domesticatedList" (onDone)="updateList($event);">
+            <app-domesticated-detail [domesticatedList]="domesticatedList" (onDone)="updateList($event);" (editPokemon)="edit($event);">
 
             </app-domesticated-detail>
         </ng-template>
