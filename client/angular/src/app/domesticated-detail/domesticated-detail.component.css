@@ -6,3 +6,9 @@ th{
     opacity: 0;
     display: none;
 }
+
+button{
+    background-color: transparent;
+    border: none;
+    color: black;
+}

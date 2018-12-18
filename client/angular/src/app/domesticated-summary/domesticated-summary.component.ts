@@ -1,7 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
 import { MyPokemon } from '../classes/mypokemon';
-
+import { ServiceStatus } from '../classes/serviceStatus';
 import { SingleDomesPokemonComponent } from '../single-domes-pokemon/single-domes-pokemon.component';
 
 @Component({
@@ -15,7 +15,7 @@ export class DomesticatedSummaryComponent implements OnInit {
     displaySingle = false;
     pokemon: MyPokemon;
     @Input() domesticatedList: MyPokemon[]
-
+    @Output() onDone = new EventEmitter<ServiceStatus>();
     constructor() { }
 
     ngOnInit() { }
@@ -25,9 +25,12 @@ export class DomesticatedSummaryComponent implements OnInit {
         this.displaySingle = true;
     }
 
-    closeSingle(display: boolean): void {
-        this.displaySingle = display;
-        // this.getDomesticatedPokemons(this.pokemonOrder);
+    closeSingle(response: ServiceStatus): void {
+
+        if (response.status === 'done') {
+            this.displaySingle = false;
+            this.onDone.emit(response)
+        }
     }
 
 }

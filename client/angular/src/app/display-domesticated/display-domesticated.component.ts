@@ -15,7 +15,7 @@ export class DisplayDomesticatedComponent implements OnInit {
     typesList: PokemonType[] = [];
     pokemonOrder = 'cp';
     newEditTemplate = 'none';
-    displaySummary = false;
+    displaySummary = true;
 
     constructor(
         private myPokemonService: MypokemonsService,
@@ -49,7 +49,7 @@ export class DisplayDomesticatedComponent implements OnInit {
         });
     }
 
-    hideShow(ptype) {
+    hideShow(ptype: PokemonType) {
         ptype.selected = !ptype.selected;
         this.domesticatedList = this.domesticatedList.map((pokemon) => {
             if (pokemon.types.includes(ptype._id)) {
@@ -57,5 +57,10 @@ export class DisplayDomesticatedComponent implements OnInit {
             }
             return pokemon;
         });
+    }
+    updateList(response: ServiceStatus) {
+        if (response.status === 'done') {
+            this.getDomesticatedPokemons(this.pokemonOrder);
+        }
     }
 }

@@ -160,13 +160,13 @@ app.delete('/api/mypokemons', (req, res) => {
         const response = del('domesticatedPokemon', _id);
         response.then((r) => {
             if (r.deletedCount === 0) {
-                res.send({ status: 'INVALID' });
+                res.send({ status: 'failed' });
             } else {
-                res.send({ status: 'OK' });
+                res.send({ status: 'done' });
             }
         });
     } else {
-        res.send({ status: 'INVALID' });
+        res.send({ status: 'failed' });
     }
 });
 app.listen(process.env.PORT || 8081);

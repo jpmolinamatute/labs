@@ -35,11 +35,15 @@
     <div id="content">
         <ng-container *ngIf="displaySummary; then summary; else detail"></ng-container>
         <ng-template #summary>
-            <app-domesticated-summary [domesticatedList]="domesticatedList"></app-domesticated-summary>
+            <app-domesticated-summary [domesticatedList]="domesticatedList" (onDone)="updateList($event);">
+
+            </app-domesticated-summary>
         </ng-template>
 
         <ng-template #detail>
-            <app-domesticated-detail [domesticatedList]="domesticatedList"></app-domesticated-detail>
+            <app-domesticated-detail [domesticatedList]="domesticatedList" (onDone)="updateList($event);">
+
+            </app-domesticated-detail>
         </ng-template>
     </div>
 </div>

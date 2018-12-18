@@ -1,5 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { MyPokemon } from '../classes/mypokemon';
+import { MypokemonsService } from '../services/mypokemons.service';
+import { ServiceStatus } from '../classes/serviceStatus';
 
 @Component({
     selector: 'app-domesticated-detail',
@@ -7,10 +9,20 @@ import { MyPokemon } from '../classes/mypokemon';
     styleUrls: ['./domesticated-detail.component.css']
 })
 export class DomesticatedDetailComponent implements OnInit {
-    @Input() domesticatedList: MyPokemon[]
-    constructor() { }
+    @Input() domesticatedList: MyPokemon[];
+    @Output() onDone = new EventEmitter<ServiceStatus>();
+
+    constructor(private myPokemonService: MypokemonsService) { }
 
     ngOnInit() {
     }
 
+    edit(pokemon: MyPokemon) {
+
+    }
+
+    del(pokemon: MyPokemon) {
+        this.myPokemonService.removePokemon(pokemon._id)
+            .subscribe((response) => this.onDone.emit(response));
+    }
 }

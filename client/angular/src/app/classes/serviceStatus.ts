@@ -1,3 +1,3 @@
 export interface ServiceStatus {
-    status: 'waiting' | 'ready' | 'calling';
+    status: 'waiting' | 'ready' | 'calling' | 'done' | 'failed' | 'unknown';
 }

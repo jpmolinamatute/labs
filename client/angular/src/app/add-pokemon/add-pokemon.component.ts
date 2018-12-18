@@ -17,13 +17,15 @@ const resetValue = {
     chargedattacktype: 'none',
     fastattacktype: 'none'
 };
-function filterName(str) {
+
+function filterName(str: string) {
     let filteredStr = null;
     if (typeof str === 'string' && str.trim().length > 0) {
         filteredStr = str.toLowerCase().trim();
     }
     return filteredStr;
 }
+
 @Component({
     selector: 'app-add-pokemon',
     templateUrl: './add-pokemon.component.html',

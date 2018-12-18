@@ -6,6 +6,8 @@ import { catchError, tap } from 'rxjs/operators';
 import { MyPokemon } from '../classes/mypokemon';
 import { environment } from '../../environments/environment';
 import { MessageService } from './message.service';
+import { ServiceStatus } from '../classes/serviceStatus';
+
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -66,9 +68,9 @@ export class MypokemonsService {
             })
         };
 
-        return this.http.delete<any>(this.baseURL, opt).pipe(
+        return this.http.delete<ServiceStatus>(this.baseURL, opt).pipe(
             tap((response) => this.log(`pokemon deleted w/ _id=${_id}`)),
-            catchError(this.handleError<any>('addPokemon', 'FAILED'))
+            catchError(this.handleError<ServiceStatus>('addPokemon', { status: 'failed' }))
         );
     }
 }

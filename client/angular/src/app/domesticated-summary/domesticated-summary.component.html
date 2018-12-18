@@ -1,6 +1,6 @@
 <ng-container *ngIf="displaySingle; then single; else many"></ng-container>
 <ng-template #single>
-    <app-single-domes-pokemon [pokemon]="pokemon" [displaySingle]="displaySingle" (closeSingle)="closeSingle($event)"></app-single-domes-pokemon>
+    <app-single-domes-pokemon [pokemon]="pokemon" [displaySingle]="displaySingle" (onDone)="closeSingle($event)"></app-single-domes-pokemon>
 </ng-template>
 <ng-template #many>
     <div id="pokemon-domesticated-list">

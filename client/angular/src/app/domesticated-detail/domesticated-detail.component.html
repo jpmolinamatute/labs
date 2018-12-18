@@ -7,6 +7,7 @@
             <th scope="col">HP</th>
             <th scope="colgroup" colspan="3">Fast Attack</th>
             <th scope="colgroup" colspan="3">Charged Attack</th>
+            <th scope="col">&#32;&#32;</th>
         </tr>
     </thead>
     <tbody>
@@ -21,6 +22,10 @@
             <td>{{pokemon.chargedattack.type}}</td>
             <td>{{pokemon.chargedattack.name}}</td>
             <td>{{pokemon.chargedattack.damage}}</td>
+            <td>
+                <button type="button" (click)="edit(pokemon);"><i class="fas fa-pen"></i></button>
+                <button type="button" (click)="del(pokemon);"><i class="far fa-trash-alt"></i></button>
+            </td>
         </tr>
     </tbody>
 </table>
