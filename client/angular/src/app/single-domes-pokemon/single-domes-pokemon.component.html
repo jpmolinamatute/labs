@@ -1,16 +1,16 @@
 <div id="single-whole">
     <div id="single-wrapper">
-        <img class="pokemon" src="assets/img/{{pokemon.pokemonid}}.png" alt="{{pokemon.name}}">
+        <img class="pokemon" src="assets/img/{{pokemon.genericdata.pokemonid}}.png" alt="{{pokemon.genericdata._id}}">
         <!-- <p *ngIf="; else name">{{pokemon.nickname}}</p> -->
         <ng-container *ngIf="pokemon.nickname; then nick; else name"></ng-container>
         <ng-template #nick>
             <p>{{pokemon.nickname}}</p>
         </ng-template>
         <ng-template #name>
-            <p>{{pokemon.name}}</p>
+            <p>{{pokemon.genericdata._id}}</p>
         </ng-template>
         <div class="pokemon-types">
-            <img *ngFor="let img of pokemon.types" src="assets/img/{{img}}.png" alt="{{img}}" class="type-badges">
+            <img *ngFor="let img of pokemon.genericdata.types" src="assets/img/{{img}}.png" alt="{{img}}" class="type-badges">
         </div>
         <div class="pokemon-stats">
             <div>

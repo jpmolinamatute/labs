@@ -1,3 +1,4 @@
+import { Pokemon } from './pokemon';
 interface Attack {
     type: string;
     damage: number;
@@ -5,14 +6,12 @@ interface Attack {
 }
 
 export interface MyPokemon {
-    pokemonid: number;
+    genericdata: Pokemon;
     cp: number;
     hp: number;
     fastattack: Attack;
     chargedattack: Attack;
-    nickname?: string;
-    types?: string[];
-    name?: string;
     _id?: string;
+    nickname?: string;
     hidden?: boolean;
 }

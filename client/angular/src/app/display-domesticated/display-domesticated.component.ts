@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MypokemonsService } from '../services/mypokemons.service';
-import { TypelistService } from '../services/typelist.service';
-import { PokemonType } from '../classes/type';
 import { ServiceStatus } from '../classes/serviceStatus';
 import { MyPokemon } from '../classes/mypokemon';
+import { Types, TypeElement, typeList } from '../classes/displayTypes';
 
 @Component({
     selector: 'app-display-domesticated',
@@ -12,37 +11,17 @@ import { MyPokemon } from '../classes/mypokemon';
 })
 export class DisplayDomesticatedComponent implements OnInit {
     domesticatedList: MyPokemon[] = [];
-    typesList: PokemonType[] = [];
+    tList = typeList;
     pokemonOrder = 'cp';
     newEditTemplate = 'none';
     displaySummary = false;
-    model: MyPokemon = {
-        name: '',
-        hp: 0,
-        cp: 0,
-        pokemonid: 0,
-        chargedattack: {
-            type: 'none',
-            damage: 0
-        },
-        fastattack: {
-            type: 'none',
-            damage: 0
-        }
-    };
+    model: MyPokemon;
     constructor(
-        private myPokemonService: MypokemonsService,
-        private typeService: TypelistService
+        private myPokemonService: MypokemonsService
     ) { }
 
     ngOnInit() {
         this.getDomesticatedPokemons(this.pokemonOrder);
-        const typeSubscriber = this.typeService.init();
-        typeSubscriber.subscribe((status: ServiceStatus) => {
-            if (status.status === 'ready') {
-                this.getTypeList();
-            }
-        });
     }
 
     getDomesticatedPokemons(sort: string): void {
@@ -54,18 +33,11 @@ export class DisplayDomesticatedComponent implements OnInit {
         this.pokemonOrder = sort;
         this.getDomesticatedPokemons(this.pokemonOrder);
     }
-    getTypeList(): void {
-        const types = this.typeService.getPokemonTypes();
-        this.typesList = types.map((t) => {
-            t.selected = true;
-            return t;
-        });
-    }
 
-    hideShow(ptype: PokemonType) {
+    hideShow(ptype: TypeElement) {
         ptype.selected = !ptype.selected;
         this.domesticatedList = this.domesticatedList.map((pokemon) => {
-            if (pokemon.types.includes(ptype._id)) {
+            if (pokemon.genericdata.types.includes(ptype.type)) {
                 pokemon.hidden = !ptype.selected;
             }
             return pokemon;

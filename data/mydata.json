@@ -1,0 +1,149 @@
+[
+    {
+        "genericdata": {
+            "_id": "vaporeon",
+            "pokemonid": 134,
+            "generation": 1,
+            "legendary": false,
+            "types": [
+                "water"
+            ]
+        },
+        "cp": 2733,
+        "hp": 215,
+        "fastattack": {
+            "type": "water",
+            "damage": 5,
+            "name": "water gun"
+        },
+        "chargedattack": {
+            "type": "normal",
+            "damage": 90,
+            "name": "last resort"
+        },
+        "nickname": null
+    },
+    {
+        "genericdata": {
+            "_id": "metagross",
+            "pokemonid": 376,
+            "generation": 3,
+            "legendary": false,
+            "types": [
+                "steel",
+                "psychic"
+            ]
+        },
+        "cp": 3099,
+        "hp": 144,
+        "fastattack": {
+            "type": "psychic",
+            "damage": 12,
+            "name": "zen headbutt"
+        },
+        "chargedattack": {
+            "type": "steel",
+            "damage": 100,
+            "name": "meteor mash"
+        },
+        "nickname": "Power5.0"
+    },
+    {
+        "genericdata": {
+            "_id": "alakazam",
+            "pokemonid": 65,
+            "generation": 1,
+            "legendary": false,
+            "types": [
+                "psychic"
+            ]
+        },
+        "cp": 2603,
+        "hp": 117,
+        "fastattack": {
+            "type": "psychic",
+            "damage": 20,
+            "name": "confusion"
+        },
+        "chargedattack": {
+            "type": "ghost",
+            "damage": 100,
+            "name": "shadow ball"
+        },
+        "nickname": "Power5.0"
+    },
+    {
+        "genericdata": {
+            "_id": "steelix",
+            "pokemonid": 208,
+            "generation": 2,
+            "legendary": false,
+            "types": [
+                "steel",
+                "ground"
+            ]
+        },
+        "cp": 2005,
+        "hp": 139,
+        "fastattack": {
+            "type": "dragon",
+            "damage": 15,
+            "name": "dragon tail"
+        },
+        "chargedattack": {
+            "type": "steel",
+            "damage": 70,
+            "name": "heavy slam"
+        },
+        "nickname": "Power5.0"
+    },
+    {
+        "genericdata": {
+            "_id": "dusknoir",
+            "pokemonid": 477,
+            "generation": 4,
+            "legendary": false,
+            "types": [
+                "ghost"
+            ]
+        },
+        "cp": 2001,
+        "hp": 104,
+        "fastattack": {
+            "type": "ghost",
+            "damage": 10,
+            "name": "hex"
+        },
+        "chargedattack": {
+            "type": "ghost",
+            "damage": 50,
+            "name": "ominous wind"
+        },
+        "nickname": "Power5.0"
+    },
+    {
+        "genericdata": {
+            "_id": "shiftry",
+            "pokemonid": 275,
+            "generation": 3,
+            "legendary": false,
+            "types": [
+                "grass",
+                "dark"
+            ]
+        },
+        "cp": 1997,
+        "hp": 162,
+        "fastattack": {
+            "type": "dark",
+            "damage": 10,
+            "name": "feiny attack"
+        },
+        "chargedattack": {
+            "type": "ghost",
+            "damage": 50,
+            "name": "ominous wind"
+        },
+        "nickname": "Power5.0"
+    }
+]

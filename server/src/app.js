@@ -9,7 +9,7 @@ const ObjectID = require('mongodb').ObjectID;
 const app = express();
 const dbName = 'pokedex';
 const url = `mongodb://pokemon:dev@naruto:57017/${dbName}`;
-
+const port = process.env.PORT || 8081;
 const query = async (collectionName, queryField = {}, fields = {}, sort = { _id: 1 }) => {
     const client = await MongoClient.connect(url, { useNewUrlParser: true });
     const db = client.db(dbName);
@@ -67,26 +67,24 @@ function processDomesticated(result1, callback) {
     });
 }
 
-// async function getpokemonTeam(against) {
-//     let team = null;
+async function getpokemonTeam(against) {
+    let team = null;
 
-//     if (Array.isArray(against) && against.length > 0) {
-//         const length = against.length;
-//         team = [];
-//         against.forEach((a) => {
-//             const item = {
-//                 oponent: a,
-//                 members1: db.pokemontypes.find({ efective: a }, { _id: 1 }).fetch(),
-//                 members2: db.pokemontypes.find({ fair: a }, { _id: 1 }).fetch()
-//             };
+    if (Array.isArray(against) && against.length > 0) {
+        const length = against.length;
+        team = [];
+        against.forEach((a) => {
+            const item = {
+                oponent: a,
+                members1: db.pokemontypes.find({ efective: a }, { _id: 1 }).fetch(),
+                members2: db.pokemontypes.find({ fair: a }, { _id: 1 }).fetch()
+            };
 
-//             team.push(item);
-//         });
-
-//         team = 5;
-//     }
-//     return team;
-// }
+            team.push(item);
+        });
+    }
+    return team;
+}
 
 
 app.use(morgan('combined'));
@@ -146,11 +144,7 @@ app.get('/api/mypokemons', (req, res) => {
 
     const result = query('domesticatedPokemon', {}, {}, sort);
     result.then((doc) => {
-        if (Array.isArray(doc) && doc.length > 0) {
-            processDomesticated(doc, res);
-        } else {
-            res.send([]);
-        }
+        res.send(doc);
     });
 });
 
@@ -169,4 +163,6 @@ app.delete('/api/mypokemons', (req, res) => {
         res.send({ status: 'failed' });
     }
 });
-app.listen(process.env.PORT || 8081);
+app.listen(port, () => {
+    console.log(`Listening to  http://localhost:${port}`);
+});

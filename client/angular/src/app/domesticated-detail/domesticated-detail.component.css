@@ -1,4 +1,4 @@
-th{
+th, td{
     text-align: center;
 } 
 
@@ -12,3 +12,22 @@ button{
     border: none;
     color: black;
 }
+
+table thead tr:first-child th{
+    border-bottom: none;
+}
+
+
+table thead tr:first-child th:nth-child(2), 
+table thead tr:first-child th:nth-child(3),
+table thead tr:first-child th:nth-child(4),
+table thead tr:nth-child(2) th:nth-child(5),
+table thead tr:nth-child(2) th:nth-child(8),
+table thead tr:nth-child(2) th:nth-child(11){
+    border-left: 2px solid #dee2e6;
+} 
+
+table thead tr:nth-child(2) th{
+    border-top: none;
+}
+/* 2px solid #dee2e6; */

@@ -1,6 +1,6 @@
-<div id="wizard" [ngStyle]="{'display': newEditTemplate}">
+<!-- <div id="wizard" [ngStyle]="{'display': newEditTemplate}">
     <app-add-pokemon [model]="model"></app-add-pokemon>
-</div>
+</div> -->
 <div id="display-wrapper">
     <div id="controls">
         <div class="form-group col-md-1">
@@ -22,11 +22,11 @@
             </label>
         </div>
         <div class="rest">
-            <div *ngFor="let ptype of typesList" class="p-type" [ngClass]="ptype.selected ? 'p-selected' : ''">
-                <label for="{{ptype._id}}-type">
-                    <img src="assets/img/{{ptype._id}}.png" alt="{{ptype._id}}">
+            <div *ngFor="let ptype of tList" class="p-type" [ngClass]="ptype.selected ? 'p-selected' : ''">
+                <label for="{{ptype.type}}-type">
+                    <img src="assets/img/{{ptype.type}}.png" alt="{{ptype.type}}">
                 </label>
-                <input id="{{ptype._id}}-type" type="checkbox" name="pokemon-type" value="{{ptype._id}}" [checked]="ptype.selected"
+                <input id="{{ptype.type}}-type" type="checkbox" name="pokemon-type" value="{{ptype.type}}" [checked]="ptype.selected"
                     (change)="hideShow(ptype);" class="hidden">
             </div>
         </div>

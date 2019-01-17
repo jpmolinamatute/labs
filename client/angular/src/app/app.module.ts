@@ -9,7 +9,6 @@ import { DomesticatedSummaryComponent } from './domesticated-summary/domesticate
 import { DomesticatedDetailComponent } from './domesticated-detail/domesticated-detail.component';
 import { SingleDomesPokemonComponent } from './single-domes-pokemon/single-domes-pokemon.component';
 import { PokemonlistService } from './services/pokemonlist.service';
-import { TypelistService } from './services/typelist.service';
 import { DisplayDomesticatedComponent } from './display-domesticated/display-domesticated.component';
 
 @NgModule({
@@ -27,7 +26,7 @@ import { DisplayDomesticatedComponent } from './display-domesticated/display-dom
         FormsModule,
         HttpClientModule
     ],
-    providers: [PokemonlistService, TypelistService],
+    providers: [PokemonlistService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

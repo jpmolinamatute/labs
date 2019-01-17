@@ -2,7 +2,6 @@ import { Component, OnInit, Input } from '@angular/core';
 import { NgForm } from '@angular/forms';
 
 import { PokemonlistService } from '../services/pokemonlist.service';
-import { TypelistService } from '../services/typelist.service';
 import { PokemonType } from '../classes/type';
 import { MypokemonsService } from '../services/mypokemons.service';
 import { MyPokemon } from '../classes/mypokemon';
@@ -40,7 +39,6 @@ export class AddPokemonComponent implements OnInit {
 
     constructor(
         private pokemonService: PokemonlistService,
-        private typeService: TypelistService,
         private myPokemonService: MypokemonsService
     ) { }
 
@@ -52,18 +50,9 @@ export class AddPokemonComponent implements OnInit {
             }
         });
 
-        const typeSubscriber = this.typeService.init();
-        typeSubscriber.subscribe((status: ServiceStatus) => {
-            if (status.status === 'ready') {
-                this.getTypeList();
-            }
-        });
     }
     getPokemonsList(): void {
         this.pokemonsList = this.pokemonService.getAllPokemonsName();
-    }
-    getTypeList(): void {
-        this.typesList = this.typeService.getPokemonTypes();
     }
     onKey(event: any): void {
         const regexLETTER = /Key[ABCDEFGHIJKLMNOPQRSTUVWXYZ]/;
@@ -120,38 +109,37 @@ export class AddPokemonComponent implements OnInit {
 
         const pokemonData = this.pokemonService.getPokemonByName(pokemonname);
 
-        if (typeof pokemonData === 'object') {
-            const pokemon: MyPokemon = {
-                pokemonid: pokemonData.pokemonid,
-                cp: +cp,
-                hp: +hp,
-                fastattack: {
-                    type: fastattacktype,
-                    damage: +fastattackdamage,
-                    name: filterName(fastattackname)
-                },
-                chargedattack: {
-                    type: chargedattacktype,
-                    damage: +chargedattackdamage,
-                    name: filterName(chargedattackname)
-                },
-                nickname: filterName(rawnickname)
-            };
+        // if (typeof pokemonData === 'object') {
+        //     const pokemon: MyPokemon = {
+        //         cp: +cp,
+        //         hp: +hp,
+        //         fastattack: {
+        //             type: fastattacktype,
+        //             damage: +fastattackdamage,
+        //             name: filterName(fastattackname)
+        //         },
+        //         chargedattack: {
+        //             type: chargedattacktype,
+        //             damage: +chargedattackdamage,
+        //             name: filterName(chargedattackname)
+        //         },
+        //         nickname: filterName(rawnickname)
+        //     };
 
-            this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
-                if (result.ok === 1) {
-                    pokemonForm.reset(resetValue);
-                    document.getElementById('new-pokemon').focus();
-                } else {
-                    console.error('Error: something went wrong when inserting a pokemon');
-                }
-            });
-        }
+        //     this.myPokemonService.addPokemon(pokemon).subscribe((result) => {
+        //         if (result.ok === 1) {
+        //             pokemonForm.reset(resetValue);
+        //             document.getElementById('new-pokemon').focus();
+        //         } else {
+        //             console.error('Error: something went wrong when inserting a pokemon');
+        //         }
+        //     });
+        // }
 
     }
 
     addPokemonName(pokemon: string): void {
-        this.model.name = pokemon;
+        // this.model.name = pokemon;
         this.resetName();
     }
 }

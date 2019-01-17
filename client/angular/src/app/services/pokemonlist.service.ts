@@ -42,13 +42,13 @@ export class PokemonlistService {
     getPokemonByName(name: string): Pokemon {
         let info: Pokemon;
         this.list.forEach((item) => {
-            if (item.name === name) {
+            if (item._id === name) {
                 info = item;
             }
         });
         return info;
     }
     getAllPokemonsName(): string[] {
-        return this.list.map((item) => item.name);
+        return this.list.map((item) => item._id);
     }
 }

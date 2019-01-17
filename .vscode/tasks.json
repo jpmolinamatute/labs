@@ -14,7 +14,8 @@
                 "cwd": "${workspaceRoot}/client/angular"
             },
             "presentation": {
-                "panel": "dedicated"
+                "panel": "dedicated",
+                "clear": true
             },
             "problemMatcher": [
                 "$tsc"
@@ -32,7 +33,8 @@
                 "cwd": "${workspaceRoot}/server"
             },
             "presentation": {
-                "panel": "dedicated"
+                "panel": "dedicated",
+                "clear": true
             },
             "problemMatcher": [
                 "$eslint-compact",

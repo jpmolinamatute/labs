@@ -2,7 +2,7 @@
     "tslint.configFile": "client/angular/tslint.json",
     "eslint.alwaysShowStatus": true,
     "eslint.options": {
-        "configFile": "package.json"
+        "configFile": "./package.json"
     },
     "eslint.nodePath": "node_modules"
 }

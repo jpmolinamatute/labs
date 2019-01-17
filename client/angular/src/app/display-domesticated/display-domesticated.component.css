@@ -28,7 +28,7 @@ div#content{
     order: 2;
     flex: 1 1 auto;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 div#controls > div:first-child{

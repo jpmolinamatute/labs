@@ -6,11 +6,11 @@
     <div id="pokemon-domesticated-list">
         <div *ngFor="let pokemon of domesticatedList" class="pokemon-wrapper" [ngClass]="pokemon.hidden ? 'hidden' : ''">
             <button type="button" (click)="displaySigle(pokemon);">
-                <img src="assets/img/{{pokemon.pokemonid}}.png" alt="{{pokemon.name}}">
+                <img src="assets/img/{{pokemon.genericdata.pokemonid}}.png" alt="{{pokemon.genericdata._id}}">
             </button>
             <p *ngIf="pokemon.nickname; else elseBlock">{{pokemon.nickname}}</p>
             <ng-template #elseBlock>
-                <p>{{pokemon.name}}</p>
+                <p>{{pokemon.genericdata._id}}</p>
             </ng-template>
         </div>
     </div>

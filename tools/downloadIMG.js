@@ -17378,5 +17378,5 @@ list.forEach((l) => {
     } else {
         print(l.id);
     }
-    db.pokemonlist.update({ pokemonid: l.id }, { $set: toSave }, {upsert: true});
+    db.pokemonlist.update({ pokemonid: l.id }, { $set: toSave }, { upsert: true });
 });
