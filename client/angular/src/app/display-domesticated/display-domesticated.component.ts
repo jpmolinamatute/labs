@@ -29,12 +29,12 @@ export class DisplayDomesticatedComponent implements OnInit {
             this.domesticatedList = pokemons;
         });
     }
-    changeOrder(sort: string) {
+    changeOrder(sort: string): void {
         this.pokemonOrder = sort;
         this.getDomesticatedPokemons(this.pokemonOrder);
     }
 
-    hideShow(ptype: TypeElement) {
+    hideShow(ptype: TypeElement): void {
         ptype.selected = !ptype.selected;
         this.domesticatedList = this.domesticatedList.map((pokemon) => {
             if (pokemon.genericdata.types.includes(ptype.type)) {
@@ -43,13 +43,16 @@ export class DisplayDomesticatedComponent implements OnInit {
             return pokemon;
         });
     }
-    updateList(response: ServiceStatus) {
+    updateList(response: ServiceStatus): void {
         if (response.status === 'done') {
             this.getDomesticatedPokemons(this.pokemonOrder);
         }
     }
-    edit(pokemon: MyPokemon) {
+    edit(pokemon: MyPokemon): void {
         this.model = pokemon;
         this.newEditTemplate = 'block';
+    }
+    openCreatePokemon(): void {
+        this.newEditTemplate = this.newEditTemplate === 'none' ? 'block' : 'none';
     }
 }

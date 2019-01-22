@@ -1,6 +1,6 @@
-<!-- <div id="wizard" [ngStyle]="{'display': newEditTemplate}">
+<div id="wizard" [ngStyle]="{'display': newEditTemplate}">
     <app-add-pokemon [model]="model"></app-add-pokemon>
-</div> -->
+</div>
 <div id="display-wrapper">
     <div id="controls">
         <div class="form-group col-md-1">
@@ -13,7 +13,7 @@
             </select>
         </div>
         <div class="col-md-1">
-            <button type="button" class="btn" (click)="newEditTemplate = newEditTemplate === 'none' ? 'block' : 'none'">New</button>
+            <button type="button" class="btn" (click)="openCreatePokemon();">New</button>
         </div>
         <div class="col-md-1">
             <label class="switch">

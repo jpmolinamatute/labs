@@ -4,8 +4,10 @@ import { NgForm } from '@angular/forms';
 import { PokemonlistService } from '../services/pokemonlist.service';
 import { PokemonType } from '../classes/type';
 import { MypokemonsService } from '../services/mypokemons.service';
+import { Types } from '../classes/displayTypes';
 import { MyPokemon } from '../classes/mypokemon';
 import { ServiceStatus } from '../classes/serviceStatus';
+import { log } from 'util';
 
 interface PokemonFiler {
     name: string
@@ -32,23 +34,37 @@ function filterName(str: string) {
 })
 export class AddPokemonComponent implements OnInit {
     pokemonsList: string[] = [];
-    typesList: PokemonType[];
+    typesList: string[] = [];
     pokemonsFiltered: PokemonFiler[] = [];
     indexSeleted = 0;
-    @Input() model: MyPokemon;
+    @Input() model: Object;
 
     constructor(
         private pokemonService: PokemonlistService,
         private myPokemonService: MypokemonsService
-    ) { }
+    ) {
+        for (const t in Types) {
+            console.log(t);
+            if (!this.typesList.includes(t)) {
+                this.typesList.push(t);
+            }
+        }
+    }
 
     ngOnInit() {
         const pokemonSubscriber = this.pokemonService.init();
+        if (typeof this.model === 'undefined') {
+            this.model = {
+                fastattack: {},
+                chargedattack: {}
+            };
+        }
         pokemonSubscriber.subscribe((status) => {
             if (status.status === 'ready') {
                 this.getPokemonsList();
             }
         });
+
 
     }
     getPokemonsList(): void {
@@ -139,7 +155,7 @@ export class AddPokemonComponent implements OnInit {
     }
 
     addPokemonName(pokemon: string): void {
-        // this.model.name = pokemon;
+        this.model.name = pokemon;
         this.resetName();
     }
 }
