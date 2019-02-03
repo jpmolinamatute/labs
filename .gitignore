@@ -2,7 +2,6 @@
 **/node_modules
 /tools/tmp
 
-
 # IDEs and editors
 /.idea
 .project
@@ -32,3 +31,5 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+server/Python/.venv

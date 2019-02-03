@@ -4,5 +4,7 @@
     "eslint.options": {
         "configFile": "./package.json"
     },
-    "eslint.nodePath": "node_modules"
+    "eslint.nodePath": "node_modules",
+    "python.pythonPath": "server/Python/.venv/bin/python",
+    "python.venvPath": "server/Python/.venv"
 }
