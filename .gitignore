@@ -33,3 +33,4 @@ testem.log
 Thumbs.db
 
 server/Python/.venv
+server/Python/python

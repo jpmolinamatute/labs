@@ -1,0 +1,15 @@
+{
+    "name": "vanilla",
+    "version": "1.0.0",
+    "description": "",
+    "main": "main.js",
+    "scripts": {
+        "start": "serve ./src",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "serve": "^10.1.1"
+    }
+}

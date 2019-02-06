@@ -1,0 +1,32 @@
+# installing Python 3.6
+http://thelazylog.com/install-python-as-local-user-on-linux/
+https://blog.xmatthias.com/compiling-python-3-6-for-centos-5-11-with-openssl/
+wget https://www.python.org/ftp/python/3.6.6/Python-3.6.6.tgz && tar -zxf ./Python-3.6.6.tgz
+mv Python-3.6.6/* Python-3.6.6/.vsts/ . && rmdir Python-3.6.6
+./configure --prefix=$(pwd) --enable-optimizations --with-ensurepip=yes --with-tcltk-includes="-I/path/to/tclincludes -I/path/to/tkincludes" --with-tcltk-libs="-L/path/to/tcllibs -ltclm.n -L/path/to/tklibs -ltkm.n"
+make && make install
+
+# creating an Environment
+Make sure eviroment is activated before installing local packages using pip
+./Python-3.6.6/python -m venv ./.env
+# To install TensorFlow
+source ./.env/bin/activate
+pip install --upgrade pip # Optional????
+pip install -U tensorflow pylint matplotlib
+pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.10.1-cp36-cp36m-linux_x86_64.whl (3.6)
+pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.10.1-cp35-cp35m-linux_x86_64.whl (3.5)
+python -c "import tensorflow as tf; print(tf.__version__)"
+
+#  Workspace settings
+{
+    "python.pythonPath": "/home/juanpa/Projects/TensorFlow/.env/bin/python",
+    "python.venvPath": "/home/juanpa/Projects/TensorFlow/.env",
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "/home/juanpa/Projects/TensorFlow/venv": true,
+        "/home/juanpa/Projects/TensorFlow/Python-3.6.6": true
+    },
+    "python.linting.pylintPath": "/home/juanpa/Projects/TensorFlow/.env/bin/pylint"
+}
