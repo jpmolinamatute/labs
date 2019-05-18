@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+THISSCRIPT=$(basename "$0")
+DESTINATION="/home/juanpa/Downloads"
+COUNTER=""
+FILENAME=""
+URLPAT1="^https?://"
+URLPAT2="\.(mp4|mkv)$"
+
+URL=()
+
+Usage() {
+    cat <<EOF
+
+    Usage: $THISSCRIPT Options URL [URL...]
+    
+    Options:
+        --help        :    display this help
+        --name        :    base name for all files to be downloaded
+        --counter     :
+        --destination :    a writable directory
+
+    URL:
+
+EOF
+}
+
+download() {
+    for i in "${URL[@]}"; do
+        local extension="${i: -3}"
+        local fileTobeWritten="${DESTINATION}/${FILENAME}${COUNTER}.${extension}"
+        echo "Downloading ${fileTobeWritten}"
+        if wget -O "${fileTobeWritten}" --no-use-server-timestamps "$i"; then
+            local longFiletype
+            local shortFiletype
+            longFiletype="$(file -b --mime-type "$fileTobeWritten")"
+            shortFiletype="$(echo "longFiletype" | cut -d'/' -f2)"
+            if [[ $shortFiletype != "$extension" && $longFiletype == "text/plain" ]]; then
+                echo "ERROR: Server is providing a fake file $fileTobeWritten" >&2
+                exit 2
+            fi
+        else
+            echo "ERROR: failed to download $i" >&2
+            exit 2
+        fi
+        COUNTER=$((COUNTER + 1))
+    done
+}
+
+checkARG() {
+    if [[ -z $COUNTER || $COUNTER -le 0 ]]; then
+        echo "Erro: Please provide a counter" >&2
+        exit 2
+    fi
+
+    if [[ -z $FILENAME ]]; then
+        echo "ERROR: Please provide a base name" >&2
+        exit 2
+    fi
+
+    if [[ ${#URL[@]} -eq 0 ]]; then
+        echo "Erro: Please provide at least ONE URL" >&2
+        exit 2
+    fi
+}
+
+if [[ -z $* ]]; then
+    Usage
+    exit 2
+fi
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    "--help")
+        Usage
+        exit 0
+        ;;
+    "--name")
+        shift
+        if [[ -n $1 ]]; then
+            FILENAME="$1"
+        else
+            Usage
+            exit 2
+        fi
+        shift
+        ;;
+    "--counter")
+        shift
+        COUNTER="$1"
+        if [[ $1 -gt 0 ]]; then
+            COUNTER="$1"
+        else
+            Usage
+            exit 2
+        fi
+        shift
+        ;;
+    "--destination")
+        shift
+        if [[ -d $1 && -w $1 ]]; then
+            if [[ ${1: -1} == "/" ]]; then
+                DESTINATION="${1::-1}"
+            else
+                DESTINATION="$1"
+            fi
+            echo "$DESTINATION"
+        else
+            Usage
+            exit 2
+        fi
+        shift
+        ;;
+    *)
+        if [[ $1 =~ $URLPAT1 && $1 =~ $URLPAT2 ]]; then
+            URL+=("$1")
+            shift
+        else
+            echo "ERROR: " >&2
+            exit 2
+        fi
+        ;;
+    esac
+done
+
+checkARG
+download
+
+exit 0

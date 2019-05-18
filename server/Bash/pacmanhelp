@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+printLine(){
+    local NC='\033[0m'
+    local WHITE='\033[1;37m'
+    local YELLOW='\033[1;33m'
+    local PURPLE='\033[0;35m'
+    local comm="$1"
+    local comp="$2"
+    local desc="$3"
+    while [  ${#comm} -lt 10 ]; do
+        local comm="${comm} "
+    done
+    echo -e "${WHITE}${comm}${YELLOW}${comp}"
+    echo -e "          ${PURPLE}${desc}${NC}"
+}
+clear
+printLine "pac" "pacman -S" "Install one or more packages"
+printLine "pacu" "pacman -Syu" "Upgrade all packages to their newest version"
+printLine "pacs" "pacman -Ss" "Search for a package using one or more keywords"
+printLine "paci" "pacman -Si" "Show information about a package"
+printLine "pacr" "pacman -Rns" "Uninstall one or more packages"
+printLine "pacl" "pacman -Sl" "List all packages of a repository"
+printLine "pacll" "pacman -Qqm" "List all packages which were locally installed (e.g. AUR packages)"
+printLine "paclo" "pacman -Qdt" "List all packages which are orphaned"
+printLine "paco" "pacman -Qo" "Determine which package owns a given file"
+printLine "pacf" "pacman -Ql" "List all files installed by a given package"
+printLine "pacc" "pacman -Sc" "Delete all not currently installed package files"
+printLine "pacm" "makepkg -fci" "Make a package from PKGBUILD file in current directory"
+printLine "pacmir" "pacman -Syyu" "Force refresh of all package lists after updating /etc/pacman.d/mirrorlist"
+printLine "pacror" "pacman -Rs \$(pacman -Qtdq)" "Remove all orphans packages"
+printLine "pacopt" "pacman -Sc && pacman-optimize" "Onptimize pacman. It can only be ran by root"

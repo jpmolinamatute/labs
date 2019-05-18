@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+workingdirectory="/tmp"
+LINK="$1"
+
+if [[ ! -d $workingdirectory || ! -w $workingdirectory ]]; then
+    echo "Error: Either ${workingdirectory} doesn't exists or is not writable" >&2
+    exit 2
+fi
+
+if [[ -z $LINK ]]; then
+    echo "Please provide a link" >&2
+    exit 2
+fi
+
+tarball="$(echo "$LINK" | awk -F/ '{print $(NF)}')"
+tarballFile="${workingdirectory}/$tarball"
+package=$(echo "$tarball" | cut -d'.' -f1)
+
+if [[ -d ${workingdirectory}/$package ]]; then
+    echo "Removing old ${workingdirectory}/$package"
+    rm -rf "${workingdirectory}/$package"
+fi
+
+if [[ ! -f $tarballFile ]]; then
+    echo "Downloading $tarballFile"
+    if ! wget -P ${workingdirectory} "$LINK"; then
+        echo "Error: Downloading $tarballFile" >&2
+        exit 2
+    fi
+fi
+
+if ! tar -C ${workingdirectory} -xf "$tarballFile"; then
+    echo "Error: untaring $tarballFile" >&2
+    exit 2
+fi
+
+cd "${workingdirectory}/$package" || exit 2
+if ! makepkg -fcis; then
+    echo "Error: creating package" >&2
+    exit 2
+fi
+
+exit 0
