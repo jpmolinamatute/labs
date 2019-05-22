@@ -5,9 +5,6 @@
         "configFile": "./package.json"
     },
     "eslint.nodePath": "node_modules",
-    "python.pythonPath": "server/Python/.venv/bin/python",
-    "python.venvPath": "server/Python/.venv",
-    "python.linting.pylintPath": "server/Python/.venv/bin/pylint",
     "files.watcherExclude": {
         ".git/objects/**": true,
         ".git/subtree-cache/**": true,
@@ -15,5 +12,11 @@
         "server/Python/.venv": true,
         "server/Python/python": true
     },
-    "javascript.validate.enable": false
+    "javascript.validate.enable": false,
+    "python.linting.flake8Enabled": false,
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.pythonPath": "server/Python/.venv/bin/python",
+    "python.venvPath": "server/Python/.venv",
+    "python.linting.pylintPath": "server/Python/.venv/bin/pylint"
 }
