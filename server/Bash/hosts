@@ -1,0 +1,55 @@
+# Static table lookup for hostnames.
+# See hosts(5) for details.
+127.0.0.1 localhost
+::1       localhost 
+127.0.1.1 matsumoto
+
+192.168.2.254 www.facebook.com facebook.com
+192.168.2.253 buymailordermarijuana.ca  98bf9h8jbg.com
+192.168.2.252 www.haldimandmotors.com haldimandmotors.com
+192.168.2.251 www.bet365.com bet365.com
+192.168.2.250 www.mericasads.com mericasads.com
+192.168.2.249 rpgmasterleague.com 0byv9mgbn0.com
+192.168.2.248 www.sportsinteraction.com sportsinteraction.com
+192.168.2.247 jndnkgjqlxr.com
+192.168.2.246 rpgmasterleague.com
+192.168.2.245 serve.popads.net
+192.168.2.244 www.mericasads.com mericasads.com
+192.168.2.243 myornamenti.com
+192.168.2.242 uod2quk646.com
+192.168.2.241 jf71qh5v14.com etreflased.info
+192.168.2.240 heroesofrpg.com
+192.168.2.239 www.flirt4free.ca flirt4free.ca
+192.168.2.238 cradver.livejasmin.com
+192.168.2.237 constintptr.com
+192.168.2.236 aspeciallink.com
+192.168.2.235 www.cam4.com cam4.com
+192.168.2.234 lp.jinnilotto.com
+192.168.2.233 h.net-dk88.stream
+192.168.2.232 m3bnqqqw.com
+192.168.2.231 c.media-dl.co
+192.168.2.230 watchunlimited.co
+192.168.2.229 trk.servedbytrackingdesk.com
+192.168.2.228 eu.dspmulti.com
+192.168.2.227 minessetion.info
+192.168.2.226 read-this-hot-stuff.today
+192.168.2.225 download.televisionfanatic.com
+192.168.2.224 groucign.com
+192.168.2.223 pekreecy.com
+192.168.2.222 deloplen.com
+192.168.2.221 0.nextyourcontent.com
+192.168.2.220 cdd.opogame.com
+192.168.2.219 adjureboon.club
+192.168.2.218 free.flightsearchapp.com
+
+## vagrant-hostmanager-start id: 2b56e9d1-bcde-4a6e-8ea4-4b7f5b41a380
+10.211.55.100	vm-cluster-node1
+
+10.211.55.101	vm-cluster-node2
+
+10.211.55.102	vm-cluster-node3
+
+10.211.55.103	vm-cluster-node4
+
+## vagrant-hostmanager-end
+
