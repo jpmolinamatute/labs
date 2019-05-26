@@ -1,3 +1,4 @@
+#! /home/juanpa/Projects/labs/server/Python/.venv/bin/python
 import random
 import time
 import string
@@ -18,4 +19,6 @@ result += random.choices(allChar, k=2)
 
 random.shuffle(result)
 random.shuffle(result)
-pyperclip.copy(''.join(result))
+password = ''.join(result)
+print(f'Your new Password is {password} and it was copied to your clipboard')
+pyperclip.copy(password)
