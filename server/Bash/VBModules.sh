@@ -2,45 +2,51 @@
 
 KERNELVERSION=$(uname -r)
 BUILDDIR="/opt/kernel-headers/${KERNELVERSION}"
-MODULESDIR="/lib/modules/${KERNELVERSION}/kernel/misc"
+MODULESDIR="/usr/lib/modules/${KERNELVERSION}/kernel/misc"
 SIGNING_SCRIP="${BUILDDIR}/scripts/sign-file"
 KEYPEM="${BUILDDIR}/certs/signing_key.pem"
 KEYX509="${BUILDDIR}/certs/signing_key.x509"
 vBoxVersion=$(find /usr/src -type d -name "vboxhost-*" | cut -d'-' -f2)
 vBoxModules=("vboxdrv.ko" "vboxnetadp.ko" "vboxnetflt.ko" "vboxpci.ko")
 
+printLine() {
+    local green='\e[32m'
+    local end='\e[0m'
+    echo -e "${green}==>    $1${end}"
+}
+
 exitWithError() {
-    local COLOR='\033[0;31m'
-    local NC='\033[0m'
-    echo -e " ERROR: ${COLOR}$1${NC}"
+    local red='\e[31m'
+    local end='\e[0m'
+    echo -e "${red}==>    ERROR: $1${end}" >&2
     exit 2
 }
 
-printLine() {
-    local COLOR='\033[1;32m'
-    local NC='\033[0m'
-    echo -e "${COLOR}==>    $1${NC}"
-}
-
 printLine "Uninstalling old version of vboxhost/${vBoxVersion}"
-dkms uninstall "vboxhost/${vBoxVersion}" -k "$KERNELVERSION"
+dkms uninstall -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"
 printLine "Removing old version of vboxhost/${vBoxVersion}"
-dkms remove "vboxhost/${vBoxVersion}" -k "$KERNELVERSION"
+dkms remove -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"
 
 printLine "Building new version of vboxhost/${vBoxVersion}"
-dkms build "vboxhost/${vBoxVersion}" -k "$KERNELVERSION"
+if ! dkms build -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"; then
+    exitWithError "Building new version of vboxhost/${vBoxVersion} failed"
+fi
 
 printLine "Installing new version of vboxhost/${vBoxVersion}"
-
-if ! dkms install "vboxhost/${vBoxVersion}" -k "$KERNELVERSION"; then
+if ! dkms install -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"; then
     exitWithError "Installing DKMS modules failed"
 fi
 
 if [[ ! -f $KEYPEM ]]; then
     exitWithError "${KEYPEM} doesn't exists"
 fi
+
 if [[ ! -f $KEYX509 ]]; then
     exitWithError "$KEYX509 doesn't exists"
+fi
+
+if [[ ! -f $SIGNING_SCRIP || ! -x $SIGNING_SCRIP ]]; then
+    exitWithError "$SIGNING_SCRIP doesn't exists"
 fi
 
 for module in "${vBoxModules[@]}"; do

@@ -13,10 +13,7 @@
         "server/Python/python": true
     },
     "javascript.validate.enable": false,
-    "python.linting.flake8Enabled": false,
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.pythonPath": "server/Python/.venv/bin/python",
-    "python.venvPath": "server/Python/.venv",
-    "python.linting.pylintPath": "server/Python/.venv/bin/pylint"
+    "python.pythonPath": "/home/juanpa/Projects/labs/server/Python/.venv/bin/python",
+    "python.venvPath": "/home/juanpa/Projects/labs/server/Python/.venv",
+    "yaml.format.printWidth": 120
 }
