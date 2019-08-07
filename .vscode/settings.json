@@ -9,8 +9,8 @@
         ".git/objects/**": true,
         ".git/subtree-cache/**": true,
         "**/node_modules/**": true,
-        "server/Python/.venv": true,
-        "server/Python/python": true
+        "server/Python/.venv/**": true,
+        "server/Bash/tmpKernel/**": true
     },
     "javascript.validate.enable": false,
     "python.pythonPath": "/home/juanpa/Projects/labs/server/Python/.venv/bin/python",

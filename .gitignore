@@ -37,3 +37,5 @@ server/Python/.venv
 server/Python/python
 **/deleteme.*
 server/Bash/tmpKernel
+server/Bash/configs
+server/Bash/Error

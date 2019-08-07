@@ -74,8 +74,8 @@ writeErrorSectionFile() {
 }
 
 exitWithError() {
-    local red='\033[0;31m'
-    local end='\033[0m'
+    local red='\e[31m'
+    local end='\e[0m'
     echo -e "${red}ERROR: $1${end}" >&2
     writeToErrorFile "ERROR: $1"
     if [[ -n $2 ]]; then
@@ -86,8 +86,8 @@ exitWithError() {
 }
 
 printLine() {
-    local green='\033[1;32m'
-    local end='\033[0m'
+    local green='\e[32m'
+    local end='\e[0m'
     echo -e "${green}==>    $1${end}"
 }
 
@@ -446,7 +446,7 @@ install() {
         fi
 
         printLine "Creating initramfs-${FULLKERNELNAME}.img file"
-
+        # echo "mkinitcpio -k '${FULLKERNELNAME}' -g '/boot/initramfs-${FULLKERNELNAME}.img'"
         if ! mkinitcpio -k "${FULLKERNELNAME}" -g "/boot/initramfs-${FULLKERNELNAME}.img"; then
             exitWithError "mkinitcpio failed" "$sectionName"
         fi
