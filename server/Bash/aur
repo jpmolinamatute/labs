@@ -2,14 +2,19 @@
 workingdirectory="/tmp"
 LINK="$1"
 
-if [[ ! -d $workingdirectory || ! -w $workingdirectory ]]; then
-    echo "Error: Either ${workingdirectory} doesn't exists or is not writable" >&2
+exitWithError() {
+    local red='\e[31m'
+    local end='\e[0m'
+    echo -e "${red}==>    ERROR: $1${end}" >&2
     exit 2
+}
+
+if [[ ! -d $workingdirectory || ! -w $workingdirectory ]]; then
+    exitWithError "Either ${workingdirectory} doesn't exists or is not writable"
 fi
 
 if [[ -z $LINK ]]; then
-    echo "Please provide a link" >&2
-    exit 2
+    exitWithError "Please provide a link"
 fi
 
 tarball="$(echo "$LINK" | awk -F/ '{print $(NF)}')"
@@ -18,26 +23,23 @@ package=$(echo "$tarball" | cut -d'.' -f1)
 
 if [[ -d ${workingdirectory}/$package ]]; then
     echo "Removing old ${workingdirectory}/$package"
-    rm -rf "${workingdirectory}/$package"
+    rm -rf "${workingdirectory:?}/$package"
 fi
 
 if [[ ! -f $tarballFile ]]; then
     echo "Downloading $tarballFile"
     if ! wget -P ${workingdirectory} "$LINK"; then
-        echo "Error: Downloading $tarballFile" >&2
-        exit 2
+        exitWithError "Downloading $tarballFile"
     fi
 fi
 
 if ! tar -C ${workingdirectory} -xf "$tarballFile"; then
-    echo "Error: untaring $tarballFile" >&2
-    exit 2
+    exitWithError "untaring $tarballFile"
 fi
 
 cd "${workingdirectory}/$package" || exit 2
 if ! makepkg -fcis; then
-    echo "Error: creating package" >&2
-    exit 2
+    exitWithError "creating package failed"
 fi
 
 exit 0

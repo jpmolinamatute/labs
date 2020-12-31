@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-THISSCRIPT="$(basename "$0")"
-SRCDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+THISPATH="$(readlink -f "$0")"
+THISSCRIPT="$(basename "$THISPATH")"
+SRCDIR="$(cd "$(dirname "$THISPATH")" && pwd)"
 ERRORFILE="${SRCDIR}/Error"
 BASESOURCEDIR="/usr/src"
-# cpuno=$(grep -Pc "processor\\t:" /proc/cpuinfo)
 cpuno=$(nproc)
 # vars set by either user or program
 KERNELVERSION=

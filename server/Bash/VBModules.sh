@@ -7,7 +7,7 @@ SIGNING_SCRIP="${BUILDDIR}/scripts/sign-file"
 KEYPEM="${BUILDDIR}/certs/signing_key.pem"
 KEYX509="${BUILDDIR}/certs/signing_key.x509"
 vBoxVersion=$(find /usr/src -type d -name "vboxhost-*" | cut -d'-' -f2)
-vBoxModules=("vboxdrv.ko" "vboxnetadp.ko" "vboxnetflt.ko" "vboxpci.ko")
+vBoxModules=("vboxdrv" "vboxnetadp" "vboxnetflt" "vboxpci")
 
 printLine() {
     local green='\e[32m'
@@ -22,11 +22,15 @@ exitWithError() {
     exit 2
 }
 
-printLine "Uninstalling old version of vboxhost/${vBoxVersion}"
-dkms uninstall -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"
-printLine "Removing old version of vboxhost/${vBoxVersion}"
-dkms remove -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"
+if [[ $EUID -ne 0 ]]; then
+    exitWithError "This script must be run as root"
+fi
 
+printLine "Uninstalling old version of vboxhost/${vBoxVersion}"
+if dkms uninstall -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"; then
+    printLine "Removing old version of vboxhost/${vBoxVersion}"
+    dkms remove -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"
+fi
 printLine "Building new version of vboxhost/${vBoxVersion}"
 if ! dkms build -k "$KERNELVERSION" --verbose "vboxhost/${vBoxVersion}"; then
     exitWithError "Building new version of vboxhost/${vBoxVersion} failed"
@@ -45,14 +49,14 @@ if [[ ! -f $KEYX509 ]]; then
     exitWithError "$KEYX509 doesn't exists"
 fi
 
-if [[ ! -f $SIGNING_SCRIP || ! -x $SIGNING_SCRIP ]]; then
+if [[ ! -x $SIGNING_SCRIP ]]; then
     exitWithError "$SIGNING_SCRIP doesn't exists"
 fi
 
 for module in "${vBoxModules[@]}"; do
     if [[ -f ${MODULESDIR}/${module} ]]; then
         printLine "Signing module $module"
-        if ! $SIGNING_SCRIP sha1 "$KEYPEM" "$KEYX509" "${MODULESDIR}/${module}"; then
+        if ! $SIGNING_SCRIP sha1 "$KEYPEM" "$KEYX509" "${MODULESDIR}/${module}.ko.xz"; then
             exitWithError "Signing module $module failed"
         fi
     else
