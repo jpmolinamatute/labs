@@ -1,32 +1,16 @@
 #!/usr/bin/env bash
+
+CPUNO="$(nproc)"
 THISPATH="$(readlink -f "$0")"
 THISSCRIPT="$(basename "$THISPATH")"
 SRCDIR="$(cd "$(dirname "$THISPATH")" && pwd)"
 ERRORFILE="${SRCDIR}/Error"
-BASESOURCEDIR="/usr/src"
-cpuno=$(nproc)
-# vars set by either user or program
-KERNELVERSION=
-
-# vars set WITH user input
-FULLKERNELNAME=
-BUILDDIR=
-CONFIGFILE=
-TEMPLATEVERSION=
-MODULESDIR=
-TRACKVERSION=
-SOURCESDIR=
-
-# vars set by user input
-KERNELNAME=
-BASEBUILDDIR=
+KERNELNAME="$(hostname)"
+TARFILE=
 TEMPLATEFILE=
-SOURCEVERSIONLABEL=
-EDITCONFIG=0
-DOWNLOAD=0
-DRY=0
-SAVECONFIG=
-ONDONE=
+BASEDIR=
+KERNELVERSION=
+DRY=
 
 vercomp() {
     # FROM https://stackoverflow.com/questions/4023830/how-compare-two-strings-in-dot-separated-version-format-in-bash
@@ -93,30 +77,14 @@ printLine() {
 
 checkDirectory() {
     local dir=$1
-    if [[ -n $dir ]]; then
-        if [[ ! -d $dir || ! -w $dir ]]; then
-            exitWithError "Directory $dir doesn't exists or it's not writable"
+    if [[ -n ${dir} ]]; then
+        if [[ ! -d ${dir} || ! -w ${dir} ]]; then
+            exitWithError "Directory '${dir}' doesn't exists or it's not writable"
         fi
-    else
-        exitWithError "Directory $2 doesn't exists or it's not writable"
     fi
 }
 
 checkSystem() {
-    if [[ $DRY -eq 1 ]]; then
-        local tmpkernel="${SRCDIR}/tmpKernel"
-        if [[ ! -d $tmpkernel ]]; then
-            if ! mkdir "$tmpkernel" 2>/dev/null; then
-                echo "ERROR: ${SRCDIR} is not writable"
-                exit 2
-            fi
-        fi
-        DOWNLOAD=1
-        BASESOURCEDIR=$tmpkernel
-        BASEBUILDDIR=$tmpkernel
-        SAVECONFIG=$SRCDIR
-        ERRORFILE="${tmpkernel}/Error"
-    fi
     echo "#####  Error log start here  #####" >"$ERRORFILE"
     local sectionName="checking system"
     writeErrorSectionFile "start" "$sectionName"
@@ -132,86 +100,85 @@ checkSystem() {
         exitWithError "Please install zcat" "$sectionName"
     fi
 
+    if ! command -v rsync &>/dev/null; then
+        exitWithError "Please install rsync" "$sectionName"
+    fi
+
     if [[ -z $KERNELNAME ]]; then
         exitWithError "Please provide a name" "$sectionName"
     fi
 
-    checkDirectory "$BASESOURCEDIR"
-    checkDirectory "$BASEBUILDDIR" "Base Building"
+    checkDirectory "$BASEDIR"
+    writeErrorSectionFile "end" "$sectionName"
+}
 
-    if [[ $DOWNLOAD -eq 0 ]]; then
-        if [[ -n $SOURCEVERSIONLABEL ]]; then
-            checkDirectory "${BASESOURCEDIR}/${SOURCEVERSIONLABEL}"
-        else
-            exitWithError "Please provide a kernel version label" "$sectionName"
+downloadSources() {
+    local tarFile
+    local mayorVersion
+    local sectionName="downloading sources"
+    writeErrorSectionFile "start" "$sectionName"
+    tarFile="$(wget --output-document - --quiet https://www.kernel.org/ | grep -A 1 "latest_link" | grep -Eo "linux-[4-9]\\.[0-9]+\\.?[0-9]*\\.tar\\.xz")"
+    mayorVersion="$(echo "$tarFile" | cut -d'-' -f2 | cut -d'.' -f1)"
+    TARFILE="${SRCDIR}/$tarFile"
+    if [[ ! -f "${SRCDIR}/$tarFile" ]]; then
+        printLine "Downloading ${tarFile} to ${TARFILE}"
+        if ! wget -P "${SRCDIR}" --https-only "https://cdn.kernel.org/pub/linux/kernel/v${mayorVersion}.x/${tarFile}"; then
+            exitWithError "Downloading 'linux-v${mayorVersion}.x/${tarFile}' failed" "$sectionName"
         fi
-    elif [[ $DOWNLOAD -eq 1 && -n $SOURCEVERSIONLABEL ]]; then
-        exitWithError "Source label and download cannot be used together" "$sectionName"
     fi
     writeErrorSectionFile "end" "$sectionName"
 }
 
-getVersionSources() {
-    cd "$SOURCESDIR" || exit 2
-    KERNELVERSION="$(make -s kernelversion 2>/dev/null)"
-}
-
 setVariables() {
-    if [[ $DOWNLOAD -eq 0 ]]; then
-        SOURCESDIR="${BASESOURCEDIR}/${SOURCEVERSIONLABEL}"
-        getVersionSources
-    fi
-
-    if [[ -z $TRACKVERSION ]]; then
-        FULLKERNELNAME="${KERNELVERSION}-${KERNELNAME}"
-    else
-        FULLKERNELNAME="${KERNELVERSION}-${KERNELNAME}-${TRACKVERSION}"
-    fi
-
-    BUILDDIR="${BASEBUILDDIR}/${FULLKERNELNAME}"
-    CONFIGFILE="${BUILDDIR}/.config"
-    MODULESDIR="/usr/lib/modules/${FULLKERNELNAME}"
-}
-
-getTemplateVersion() {
-    TEMPLATEVERSION="$(grep -E "# Linux/x86 [0-9.-]* Kernel Configuration" "$CONFIGFILE" | cut -d' ' -f3 | cut -d'-' -f1)"
-}
-
-setbuilddir() {
-    if [[ -d $BUILDDIR && $DRY -eq 0 ]]; then
-        printLine "A Kernel ${KERNELNAME} was found!. Do you want to Replace it or Increment it (r, i)"
-        read -r answer
-
-        if [[ $answer =~ [iI] ]]; then
-            local FILES="${BUILDDIR}*"
-            for f in $FILES; do
-                TRACKVERSION=$(basename "$f" | cut -d'-' -f3)
-            done
-
-            if [[ -z $TRACKVERSION ]]; then
-                TRACKVERSION=1
-            else
-                TRACKVERSION=$((TRACKVERSION + 1))
-            fi
-
-            setVariables
-            printLine "mkdir ${BUILDDIR}"
-            mkdir "$BUILDDIR"
-        fi
-    elif [[ ! -d $BUILDDIR ]]; then
-        printLine "mkdir ${BUILDDIR}"
-        mkdir "$BUILDDIR"
-    fi
-
-    printLine "make -j${cpuno} V=0 O=$BUILDDIR distclean"
-    if ! make -j"${cpuno}" V=0 O="$BUILDDIR" distclean 2>>"$ERRORFILE" 1>/dev/null; then
-        exitWithError "pre cleaning process failed"
-    fi
-}
-
-moveTemplate() {
-    local sectionName="getting config file"
+    local sectionName="setting variables"
+    local tmp_dir
     writeErrorSectionFile "start" "$sectionName"
+    tmp_dir="$(mktemp -d -t "${THISSCRIPT}-XXXXXXXXXX")"
+    if ! tar -xf "${TARFILE}" -C "${tmp_dir}" --strip-components=1; then
+        exitWithError "failed to temporally extract sources"
+    fi
+    cd "${tmp_dir}" || exit 2
+    KERNELVERSION="$(make -s kernelversion 2>/dev/null)-${KERNELNAME}"
+    cd "${SRCDIR}" || exit 2
+    rm -rf "${tmp_dir}"
+    if [[ $DRY -eq 1 ]]; then
+        BASEDIR="${SRCDIR}/tmpKernel"
+    else
+        BASEDIR="/usr/lib/modules"
+    fi
+
+    MODULESDIR="${BASEDIR}/${KERNELVERSION}"
+    SOURCESDIR="${MODULESDIR}/build"
+    CONFIGFILE="${SOURCESDIR}/.config"
+    if [[ -d ${MODULESDIR} ]]; then
+        printLine "removing old '${MODULESDIR}'"
+        rm -rf "${MODULESDIR}"
+    fi
+    if ! mkdir -p "${SOURCESDIR}" 2>/dev/null; then
+        exitWithError "directory '${BASEDIR}' is not writable"
+    fi
+    writeErrorSectionFile "end" "$sectionName"
+}
+
+extractSources() {
+    local sectionName="extracting sources"
+    writeErrorSectionFile "start" "$sectionName"
+    printLine "Untaring ${TARFILE} to ${SOURCESDIR}"
+    if ! tar -xf "${TARFILE}" -C "${SOURCESDIR}" --strip-components=1; then
+        exitWithError "Untaring ${TARFILE} failed" "$sectionName"
+    fi
+
+    writeErrorSectionFile "end" "$sectionName"
+}
+
+prepareBuildDir() {
+    local sectionName="preparing build directoy"
+    writeErrorSectionFile "start" "$sectionName"
+    printLine "make -j${CPUNO} V=0 distclean"
+    if ! make -j"${CPUNO}" V=0 distclean 2>>"$ERRORFILE"; then
+        exitWithError "'make distclean' failed" "$sectionName"
+    fi
+
     if [[ -f $TEMPLATEFILE ]]; then
         printLine "Config file found: $TEMPLATEFILE and copied to $CONFIGFILE"
         if ! cp "$TEMPLATEFILE" "$CONFIGFILE"; then
@@ -232,7 +199,7 @@ moveTemplate() {
             # 	cp "$TEMPLATEFILE" "$CONFIGFILE"
             #     chmod 644 "$CONFIGFILE"
             #     exitWithError "CODE ME, please! I beg you."
-            # get the highest config file from all and then cat it to ${BUILDDIR}/.config"
+            # get the highest config file from all and then cat it to ${SOURCESDIR}/.config"
         else
             exitWithError "We couldn't find a config file to use." "$sectionName"
         fi
@@ -240,12 +207,34 @@ moveTemplate() {
     writeErrorSectionFile "end" "$sectionName"
 }
 
+runOlddefconfig() {
+    local validation
+    local templateversion
+    local version
+    templateversion="$(grep -E "# Linux/x86 [0-9.-]* Kernel Configuration" "$CONFIGFILE" | cut -d' ' -f3 | cut -d'-' -f1)"
+    version="$(echo "$KERNELVERSION" | cut -d'-' -f1)"
+    vercomp "${version}" "${templateversion}"
+    validation="$?"
+    if [[ $validation -eq 1 ]]; then
+        local sectionName="Validating config version"
+        writeErrorSectionFile "start" "$sectionName"
+        printLine "make -j${CPUNO} V=0 olddefconfig"
+        if ! make -j"${CPUNO}" V=0 olddefconfig 2>>"$ERRORFILE"; then
+            exitWithError "'make olddefconfig' failed" "$sectionName"
+        fi
+        writeErrorSectionFile "end" "$sectionName"
+    elif [[ $validation -eq 2 ]]; then
+        exitWithError "You are downgrading your kernel, this is not supported" "$sectionName"
+    fi
+}
+
 modifyConfig() {
     local rootfstype
     local rootuuid
     local txt
     local swapuuid
-
+    local sectionName="Updating config file"
+    writeErrorSectionFile "start" "$sectionName"
     rootfstype="$(lsblk -o MOUNTPOINT,FSTYPE | grep -E "^/ " | awk '{print $2}')"
     rootuuid="$(lsblk -o MOUNTPOINT,PARTUUID | grep -E "^/ " | awk '{print $2}')"
     swapuuid="$(lsblk -o FSTYPE,PARTUUID | grep -E "^swap " | awk '{print $2}')"
@@ -256,58 +245,9 @@ modifyConfig() {
     # sed -Ei "s/^#? ?CONFIG_CMDLINE_OVERRIDE(=[ynm]| is not set)//" "$CONFIGFILE"
     sed -Ei "s/^#? ?CONFIG_CMDLINE[ =].*//" "$CONFIGFILE"
     sed -Ei "s/^#? ?CONFIG_CMDLINE_BOOL(=[ynm]| is not set)/${txt}/" "$CONFIGFILE"
-
-    if [[ -z $TRACKVERSION ]]; then
-        sed -Ei "s/^CONFIG_LOCALVERSION=\".*\"$/CONFIG_LOCALVERSION=\"-${KERNELNAME}\"/" "$CONFIGFILE"
-    else
-        sed -Ei "s/^CONFIG_LOCALVERSION=\".*\"$/CONFIG_LOCALVERSION=\"-${KERNELNAME}-${TRACKVERSION}\"/" "$CONFIGFILE"
-    fi
-
+    sed -Ei "s/^CONFIG_LOCALVERSION=\".*\"$/CONFIG_LOCALVERSION=\"-${KERNELNAME}\"/" "$CONFIGFILE"
     sed -Ei "s/^#? ?CONFIG_PM_STD_PARTITION[ =].*$/CONFIG_PM_STD_PARTITION=\"PARTUUID=${swapuuid}\"/" "$CONFIGFILE"
     sed -Ei "s/^#? ?CONFIG_DEFAULT_HOSTNAME[ =].*$/CONFIG_DEFAULT_HOSTNAME=\"${KERNELNAME}\"/" "$CONFIGFILE"
-}
-
-runOlddefconfig() {
-    local validation=$1
-    local sectionName="Validating config version"
-    writeErrorSectionFile "start" "$sectionName"
-    if [[ $validation -eq 1 ]]; then
-        printLine "make -j${cpuno} V=0 O=${BUILDDIR} olddefconfig"
-        if ! make -j"${cpuno}" V=0 O="$BUILDDIR" olddefconfig 2>>"$ERRORFILE"; then
-            exitWithError "'make olddefconfig' failed" "$sectionName"
-        fi
-    elif [[ $validation -eq 2 ]]; then
-        exitWithError "You are downgrading your kernel, this is not supported" "$sectionName"
-    fi
-    writeErrorSectionFile "end" "$sectionName"
-}
-
-saveConfig() {
-    if [[ -d $SAVECONFIG ]]; then
-        printLine "Copying ${CONFIGFILE} to $SAVECONFIG/config-${FULLKERNELNAME}"
-        if ! cp --remove-destination "${CONFIGFILE}" "$SAVECONFIG/config-${FULLKERNELNAME}"; then
-            exitWithError "saving ${SAVECONFIG}/config-${FULLKERNELNAME} failed"
-        fi
-    fi
-}
-
-editConfig() {
-    local sectionName="editing config file"
-    writeErrorSectionFile "start" "$sectionName"
-    if [[ $DRY -eq 0 ]]; then
-        if [[ $EDITCONFIG -eq 1 ]]; then
-            printLine "make -j${cpuno} V=0 O=${BUILDDIR} menuconfig"
-
-            if ! make -j"${cpuno}" V=0 O="$BUILDDIR" menuconfig 2>>"$ERRORFILE"; then
-                exitWithError "'make menuconfig' failed" "$sectionName"
-            fi
-        fi
-    else
-        printLine "make -j${cpuno} V=0 O=${BUILDDIR} xconfig"
-        if ! make -j"${cpuno}" V=0 O="$BUILDDIR" xconfig 2>>"$ERRORFILE"; then
-            exitWithError "'make xconfig' failed" "$sectionName"
-        fi
-    fi
     writeErrorSectionFile "end" "$sectionName"
 }
 
@@ -315,8 +255,8 @@ buildKernel() {
     if [[ $DRY -eq 0 ]]; then
         local sectionName="compiling kernel"
         writeErrorSectionFile "start" "$sectionName"
-        printLine "make -j${cpuno} V=0 O=${BUILDDIR} all"
-        if ! make -j"${cpuno}" V=0 O="$BUILDDIR" all 2>>"$ERRORFILE" 1>/dev/null; then
+        printLine "make -j${CPUNO} V=0 all"
+        if ! make -j"${CPUNO}" V=0 all 2>>"$ERRORFILE"; then
             exitWithError "'make all' failed" "$sectionName"
         fi
         writeErrorSectionFile "end" "$sectionName"
@@ -327,47 +267,80 @@ buildModules() {
     if [[ $DRY -eq 0 ]]; then
         local sectionName="creating kernel modules"
         writeErrorSectionFile "start" "$sectionName"
-        if [[ -d $MODULESDIR ]]; then
-            printLine "Removing $MODULESDIR directory"
-            rm -rf "$MODULESDIR"
-        fi
-
-        printLine "make -j${cpuno} V=0 O=${BUILDDIR} modules_install headers_install"
-
-        if ! make -j"${cpuno}" V=0 O="${BUILDDIR}" modules_install headers_install 2>>"$ERRORFILE" 1>/dev/null; then
+        printLine "make -j${CPUNO} V=0 modules_install headers_install"
+        if ! make -j"${CPUNO}" V=0 modules_install headers_install 2>>"$ERRORFILE"; then
             exitWithError "'make modules_install headers_install' failed" "$sectionName"
         fi
         writeErrorSectionFile "end" "$sectionName"
     fi
 }
 
-usage() {
-    cat <<-EOF
-    Usage: $THISSCRIPT [options]
+editConfig() {
+    local sectionName="editing config file"
+    writeErrorSectionFile "start" "$sectionName"
+    if [[ $DRY -eq 0 ]]; then
+        if [[ $EDITCONFIG -eq 1 ]]; then
+            printLine "make -j${CPUNO} V=0 menuconfig"
 
-    Options:
-    --help                      : This output.
-    --edit                      : Either or not to run GUI tool to modify config file.
-    --download                  : Either or not to download the kernel sources.
-    --build PATH                : Building directory. This directory is where hearder will be saved and the kernel will be built.
-    --source LABEL              : @FIXME
-    --name NAME                 : How you want to name this kernel.
-    --file PATH                 : Path to a config file.
-    --save                      : Path where config file will be saved
-    --ondone                    : Path to script to execute after $THISSCRIPT
-    --dry                       : will create a config file in current directory if --save is not specify
-EOF
+            if ! make -j"${CPUNO}" V=0 menuconfig 2>>"$ERRORFILE"; then
+                exitWithError "'make menuconfig' failed" "$sectionName"
+            fi
+        fi
+    else
+        printLine "make -j${CPUNO} V=0 xconfig"
+        if ! make -j"${CPUNO}" V=0 xconfig 2>>"$ERRORFILE"; then
+            exitWithError "'make xconfig' failed" "$sectionName"
+        fi
+    fi
+    writeErrorSectionFile "end" "$sectionName"
 }
 
-runExternalScript() {
-    if [[ $DRY -eq 0 && -x $ONDONE ]]; then
-        local sectionName="running external script"
-        writeErrorSectionFile "start" "$sectionName"
-        printLine "Calling ${ONDONE} ${FULLKERNELNAME} ${BUILDDIR}"
-        if ! $ONDONE "${FULLKERNELNAME}" "${BUILDDIR}"; then
-            exitWithError "This command \"${ONDONE} ${FULLKERNELNAME} ${BUILDDIR}\" failed" "$sectionName"
+saveConfig() {
+    if [[ $DRY -eq 1 ]]; then
+        printLine "Copying ${CONFIGFILE} to ${SRCDIR}/config-${KERNELVERSION}"
+        if ! cp --remove-destination "${CONFIGFILE}" "${SRCDIR}/config-${KERNELVERSION}"; then
+            exitWithError "saving ${SRCDIR}/config-${KERNELVERSION} failed"
         fi
+    fi
+}
+
+install() {
+    if [[ $DRY -eq 0 ]]; then
+        local sectionName="installing new kernel files"
+        writeErrorSectionFile "start" "$sectionName"
+        printLine "Linking ${SOURCESDIR} -> /usr/src/${KERNELVERSION}"
+        ln -sf "${SOURCESDIR}" "/usr/src/${KERNELVERSION}"
+        if [[ -f ${SOURCESDIR}/System.map ]]; then
+            printLine "Copying ${SOURCESDIR}/System.map -> /boot/System.map"
+            cp --remove-destination "${SOURCESDIR}/System.map" "/boot/System.map"
+        else
+            exitWithError "File ${SOURCESDIR}/System.map doesn't exists" "$sectionName"
+        fi
+
+        if [[ -f ${SOURCESDIR}/arch/x86_64/boot/bzImage ]]; then
+            printLine "Copying ${SOURCESDIR}/arch/x86_64/boot/bzImage -> /boot/vmlinuz-${KERNELVERSION}"
+            cp --remove-destination "${SOURCESDIR}/arch/x86_64/boot/bzImage" "/boot/vmlinuz-${KERNELVERSION}"
+        else
+            exitWithError "File ${SOURCESDIR}/arch/x86_64/boot/bzImage doesn't exists" "$sectionName"
+        fi
+
+        printLine "Creating initramfs-${KERNELVERSION}.img file"
+        if ! mkinitcpio -k "${KERNELVERSION}" -g "/boot/initramfs-${KERNELVERSION}.img"; then
+            exitWithError "mkinitcpio failed" "$sectionName"
+        fi
+
+        printLine "Saving $CONFIGFILE to /boot/config-${KERNELVERSION}"
+        cp --remove-destination "${CONFIGFILE}" "/boot/config-${KERNELVERSION}"
+        printLine "Creating entry file"
+        cat <<-EOF >"/boot/loader/entries/${KERNELVERSION}.conf"
+title Arch Linux
+linux /vmlinuz-${KERNELVERSION}
+version ${KERNELVERSION}
+initrd /intel-ucode.img
+initrd /initramfs-${KERNELVERSION}.img
+EOF
         writeErrorSectionFile "end" "$sectionName"
+        printLine "Kernel ${KERNELVERSION} was successfully installed"
     fi
 }
 
@@ -378,46 +351,23 @@ getUserInput() {
             usage
             exit 0
             ;;
-        "--edit")
-            shift
-            EDITCONFIG=1
-            ;;
-        "--download")
-            shift
-            DOWNLOAD=1
-            ;;
-        "--build")
-            shift
-            BASEBUILDDIR="$(readlink -f "$1")"
-            shift
-            ;;
-        "--ondone")
-            shift
-            ONDONE="$(readlink -f "$1")"
-            shift
-            ;;
-        "--save")
-            shift
-            SAVECONFIG="$1"
-            shift
-            ;;
         "--dry")
             shift
             DRY=1
-            ;;
-        "--source")
-            shift
-            SOURCEVERSIONLABEL="$1"
-            shift
             ;;
         "--name")
             shift
             KERNELNAME="$1"
             shift
             ;;
-        "--file")
+        "--configfile")
             shift
             TEMPLATEFILE="$(readlink -f "$1")"
+            shift
+            ;;
+        "--tarfile")
+            shift
+            TARFILE="$(readlink -f "$1")"
             shift
             ;;
         *)
@@ -427,105 +377,19 @@ getUserInput() {
     done
 }
 
-install() {
-    if [[ $DRY -eq 0 ]]; then
-        local sectionName="installing new kernel files"
-        writeErrorSectionFile "start" "$sectionName"
-        if [[ -f $BUILDDIR/System.map ]]; then
-            printLine "Copying $BUILDDIR/System.map -> /boot/System.map"
-            cp --remove-destination "$BUILDDIR/System.map" "/boot/System.map"
-        else
-            exitWithError "File $BUILDDIR/System.map doesn't exists" "$sectionName"
-        fi
-
-        if [[ -f $BUILDDIR/arch/x86_64/boot/bzImage ]]; then
-            printLine "Copying $BUILDDIR/arch/x86_64/boot/bzImage -> /boot/vmlinuz-${FULLKERNELNAME}"
-            cp --remove-destination "$BUILDDIR/arch/x86_64/boot/bzImage" "/boot/vmlinuz-${FULLKERNELNAME}"
-        else
-            exitWithError "File $BUILDDIR/arch/x86_64/boot/bzImage doesn't exists" "$sectionName"
-        fi
-
-        printLine "Creating initramfs-${FULLKERNELNAME}.img file"
-        # echo "mkinitcpio -k '${FULLKERNELNAME}' -g '/boot/initramfs-${FULLKERNELNAME}.img'"
-        if ! mkinitcpio -k "${FULLKERNELNAME}" -g "/boot/initramfs-${FULLKERNELNAME}.img"; then
-            exitWithError "mkinitcpio failed" "$sectionName"
-        fi
-
-        printLine "Saving $CONFIGFILE to /boot/config-${FULLKERNELNAME}"
-        cp --remove-destination "${CONFIGFILE}" "/boot/config-${FULLKERNELNAME}"
-
-        printLine "Creating entry file"
-        cat <<-EOF >"/boot/loader/entries/${FULLKERNELNAME}.conf"
-title Arch Linux
-linux /vmlinuz-${FULLKERNELNAME}
-version ${FULLKERNELNAME}
-initrd /intel-ucode.img
-initrd /initramfs-${FULLKERNELNAME}.img
-EOF
-        writeErrorSectionFile "end" "$sectionName"
-        printLine "Kernel ${FULLKERNELNAME} was successfully installed"
-    fi
-}
-
-downloadSources() {
-    if [[ $DOWNLOAD -eq 1 ]]; then
-        local tarFile
-        local mayorVersion
-        local tarPath
-        local prefix="linux-"
-        local suffic="\\.tar\\.xz"
-        local sectionName="downloading sources"
-        writeErrorSectionFile "start" "$sectionName"
-        tarFile="$(wget --output-document - --quiet https://www.kernel.org/ | grep -A 1 "latest_link" | grep -Eo "linux-[4-9]\\.[0-9]+\\.?[0-9]*\\.tar\\.xz")"
-        mayorVersion="$(echo "$tarFile" | cut -d'-' -f2 | cut -d'.' -f1)"
-        KERNELVERSION="${tarFile#$prefix}"
-        KERNELVERSION="${KERNELVERSION%$suffic}"
-        SOURCESDIR="${BASESOURCEDIR}/linux-${KERNELVERSION}"
-        tarPath="${BASESOURCEDIR}/${tarFile}"
-
-        if [[ ! -f $tarPath ]]; then
-            printLine "Downloading latest Linux Kernel: version found ${KERNELVERSION}"
-
-            if ! wget -P "$BASESOURCEDIR" --https-only "https://cdn.kernel.org/pub/linux/kernel/v${mayorVersion}.x/${tarFile}"; then
-                exitWithError "Downloading ${tarFile} failed" "$sectionName"
-            fi
-        else
-            if [[ -d $SOURCESDIR ]]; then
-                printLine "Removing sources downloaded previously"
-                rm -rf "$SOURCESDIR"
-            fi
-        fi
-
-        printLine "Untaring $tarPath"
-
-        if ! tar -xf "$tarPath" -C "$BASESOURCEDIR" --overwrite; then
-            exitWithError "Untaring $tarPath failed" "$sectionName"
-        fi
-        writeErrorSectionFile "end" "$sectionName"
-        setVariables
-        cd "$SOURCESDIR" || exit 2
-    else
-        setVariables
-    fi
-
-}
-
 getUserInput "$@"
 checkSystem
-downloadSources
-setbuilddir
-moveTemplate
-getTemplateVersion
-vercomp "$KERNELVERSION" "$TEMPLATEVERSION"
-versionValidation=$?
-runOlddefconfig $versionValidation
+if [[ ! -f ${TARFILE} ]]; then
+    downloadSources
+fi
+setVariables
+extractSources
+cd "${SOURCESDIR}" || exit 2
+prepareBuildDir
+runOlddefconfig
 modifyConfig
 editConfig
 buildKernel
 buildModules
 install
-saveConfig
-runExternalScript
-
-printLine "Bye!"
 exit 0
