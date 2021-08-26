@@ -5,7 +5,7 @@ THISPATH="$(readlink -f "$0")"
 THISSCRIPT="$(basename "$THISPATH")"
 SRCDIR="$(cd "$(dirname "$THISPATH")" && pwd)"
 ERRORFILE="${SRCDIR}/Error"
-KERNELNAME="$(hostname)"
+KERNELNAME="$(hostnamectl --static)"
 TARFILE=
 TEMPLATEFILE=
 BASEDIR=
@@ -142,13 +142,11 @@ setVariables() {
     if [[ $DRY -eq 1 ]]; then
         BASEDIR="${SRCDIR}/tmpKernel"
     else
-        # BASEDIR="/usr/lib/modules"
-        BASEDIR="/usr/src"
+        BASEDIR="/usr/lib/modules"
     fi
     checkDirectory "${BASEDIR}"
     modulesdir="${BASEDIR}/${KERNELVERSION}"
-    # SOURCESDIR="${modulesdir}/build"
-    SOURCESDIR="${BASEDIR}/${KERNELVERSION}"
+    SOURCESDIR="${modulesdir}/build"
     CONFIGFILE="${SOURCESDIR}/.config"
     if [[ -d ${modulesdir} ]]; then
         printLine "removing old '${modulesdir}'"
@@ -318,7 +316,7 @@ install() {
         local sectionName="installing new kernel files"
         writeErrorSectionFile "start" "$sectionName"
         printLine "Linking ${SOURCESDIR} -> /usr/src/${KERNELVERSION}"
-        # ln -sf "${SOURCESDIR}" "/usr/src/${KERNELVERSION}"
+        ln -sf "${SOURCESDIR}" "/usr/src/${KERNELVERSION}"
         if [[ -f ${SOURCESDIR}/System.map ]]; then
             printLine "Copying ${SOURCESDIR}/System.map -> /boot/System.map"
             cp --remove-destination "${SOURCESDIR}/System.map" "/boot/System.map"
