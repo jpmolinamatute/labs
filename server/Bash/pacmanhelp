@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-printLine(){
+printLine() {
     local NC='\033[0m'
     local WHITE='\033[1;37m'
     local YELLOW='\033[1;33m'
@@ -8,12 +8,13 @@ printLine(){
     local comm="$1"
     local comp="$2"
     local desc="$3"
-    while [  ${#comm} -lt 10 ]; do
+    while [ ${#comm} -lt 10 ]; do
         local comm="${comm} "
     done
     echo -e "${WHITE}${comm}${YELLOW}${comp}"
     echo -e "          ${PURPLE}${desc}${NC}"
 }
+
 clear
 printLine "pac" "pacman -S" "Install one or more packages"
 printLine "pacu" "pacman -Syu" "Upgrade all packages to their newest version"

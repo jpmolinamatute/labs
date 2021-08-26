@@ -1,4 +1,0 @@
-Main:
-    - https://docs.aws.amazon.com/cloudformation/index.html
-User_Guide:
-    - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html

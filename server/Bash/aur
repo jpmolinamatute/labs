@@ -38,8 +38,9 @@ if ! tar -C ${workingdirectory} -xf "$tarballFile"; then
 fi
 
 cd "${workingdirectory}/$package" || exit 2
-if ! makepkg -fcis; then
+if ! makepkg -fcis --noconfirm --needed --check; then
     exitWithError "creating package failed"
 fi
 
+rm -rf "${workingdirectory:?}/$package" "$tarballFile"
 exit 0

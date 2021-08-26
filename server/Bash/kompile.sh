@@ -10,17 +10,18 @@ TARFILE=
 TEMPLATEFILE=
 BASEDIR=
 KERNELVERSION=
-DRY=
+DRY=0
+export QT_QPA_PLATFORM=wayland
 
 vercomp() {
     # FROM https://stackoverflow.com/questions/4023830/how-compare-two-strings-in-dot-separated-version-format-in-bash
     # thanks Dennis Williamson
-    if [[ $1 == "$2" ]]; then
+    if [[ ${1} == "$2" ]]; then
         return 0
     fi
     local IFS='.'
     local i ver1 ver2
-    read -r -a ver1 <<<"$1"
+    read -r -a ver1 <<<"${1}"
     read -r -a ver2 <<<"$2"
 
     # fill empty fields in ver1 with zeros
@@ -43,13 +44,13 @@ vercomp() {
 }
 
 writeToErrorFile() {
-    if [[ -n $1 ]]; then
-        echo "$1" >>"$ERRORFILE"
+    if [[ -n ${1} ]]; then
+        echo "${1}" >>"${ERRORFILE}"
     fi
 }
 
 writeErrorSectionFile() {
-    if [[ $1 == "start" ]]; then
+    if [[ ${1} == "start" ]]; then
         local startend="START"
     else
         local startend="END"
@@ -60,32 +61,30 @@ writeErrorSectionFile() {
 exitWithError() {
     local red='\e[31m'
     local end='\e[0m'
-    echo -e "${red}ERROR: $1${end}" >&2
-    writeToErrorFile "ERROR: $1"
+    echo -e "${red}ERROR: ${1}${end}" >&2
+    writeToErrorFile "ERROR: ${1}"
     if [[ -n $2 ]]; then
         writeErrorSectionFile "end" "$2"
     fi
-    echo "Please read $ERRORFILE for more information" >&2
+    echo "Please read ${ERRORFILE} for more information" >&2
     exit 2
 }
 
 printLine() {
     local green='\e[32m'
     local end='\e[0m'
-    echo -e "${green}==>    $1${end}"
+    echo -e "${green}==>    ${1}${end}"
 }
 
 checkDirectory() {
-    local dir=$1
-    if [[ -n ${dir} ]]; then
-        if [[ ! -d ${dir} || ! -w ${dir} ]]; then
-            exitWithError "Directory '${dir}' doesn't exists or it's not writable"
-        fi
+    local dir=${1}
+    if [[ ! -d ${dir} || ! -w ${dir} ]]; then
+        exitWithError "Directory '${dir}' doesn't exists or it's not writable"
     fi
 }
 
 checkSystem() {
-    echo "#####  Error log start here  #####" >"$ERRORFILE"
+    echo "#####  Error log start here  #####" >"${ERRORFILE}"
     local sectionName="checking system"
     writeErrorSectionFile "start" "$sectionName"
     if [[ $DRY -eq 0 && $EUID -ne 0 ]]; then
@@ -107,8 +106,6 @@ checkSystem() {
     if [[ -z $KERNELNAME ]]; then
         exitWithError "Please provide a name" "$sectionName"
     fi
-
-    checkDirectory "$BASEDIR"
     writeErrorSectionFile "end" "$sectionName"
 }
 
@@ -132,6 +129,7 @@ downloadSources() {
 setVariables() {
     local sectionName="setting variables"
     local tmp_dir
+    local modulesdir
     writeErrorSectionFile "start" "$sectionName"
     tmp_dir="$(mktemp -d -t "${THISSCRIPT}-XXXXXXXXXX")"
     if ! tar -xf "${TARFILE}" -C "${tmp_dir}" --strip-components=1; then
@@ -144,15 +142,17 @@ setVariables() {
     if [[ $DRY -eq 1 ]]; then
         BASEDIR="${SRCDIR}/tmpKernel"
     else
-        BASEDIR="/usr/lib/modules"
+        # BASEDIR="/usr/lib/modules"
+        BASEDIR="/usr/src"
     fi
-
-    MODULESDIR="${BASEDIR}/${KERNELVERSION}"
-    SOURCESDIR="${MODULESDIR}/build"
+    checkDirectory "${BASEDIR}"
+    modulesdir="${BASEDIR}/${KERNELVERSION}"
+    # SOURCESDIR="${modulesdir}/build"
+    SOURCESDIR="${BASEDIR}/${KERNELVERSION}"
     CONFIGFILE="${SOURCESDIR}/.config"
-    if [[ -d ${MODULESDIR} ]]; then
-        printLine "removing old '${MODULESDIR}'"
-        rm -rf "${MODULESDIR}"
+    if [[ -d ${modulesdir} ]]; then
+        printLine "removing old '${modulesdir}'"
+        rm -rf "${modulesdir}"
     fi
     if ! mkdir -p "${SOURCESDIR}" 2>/dev/null; then
         exitWithError "directory '${BASEDIR}' is not writable"
@@ -174,8 +174,8 @@ extractSources() {
 prepareBuildDir() {
     local sectionName="preparing build directoy"
     writeErrorSectionFile "start" "$sectionName"
-    printLine "make -j${CPUNO} V=0 distclean"
-    if ! make -j"${CPUNO}" V=0 distclean 2>>"$ERRORFILE"; then
+    printLine "make -j${CPUNO} V=1 distclean"
+    if ! make -j"${CPUNO}" V=1 distclean >>"${ERRORFILE}" 2>&1; then
         exitWithError "'make distclean' failed" "$sectionName"
     fi
 
@@ -218,13 +218,19 @@ runOlddefconfig() {
     if [[ $validation -eq 1 ]]; then
         local sectionName="Validating config version"
         writeErrorSectionFile "start" "$sectionName"
-        printLine "make -j${CPUNO} V=0 olddefconfig"
-        if ! make -j"${CPUNO}" V=0 olddefconfig 2>>"$ERRORFILE"; then
+        printLine "make -j${CPUNO} V=1 olddefconfig"
+        if ! make -j"${CPUNO}" V=1 olddefconfig >>"${ERRORFILE}" 2>&1; then
             exitWithError "'make olddefconfig' failed" "$sectionName"
+        fi
+
+        if ! make -j"${CPUNO}" V=1 prepare >>"${ERRORFILE}" 2>&1; then
+            exitWithError "'make prepare' failed" "$sectionName"
         fi
         writeErrorSectionFile "end" "$sectionName"
     elif [[ $validation -eq 2 ]]; then
         exitWithError "You are downgrading your kernel, this is not supported" "$sectionName"
+    elif [[ $validation -eq 0 ]]; then
+        printLine "Config file matches current version"
     fi
 }
 
@@ -255,9 +261,9 @@ buildKernel() {
     if [[ $DRY -eq 0 ]]; then
         local sectionName="compiling kernel"
         writeErrorSectionFile "start" "$sectionName"
-        printLine "make -j${CPUNO} V=0 all"
-        if ! make -j"${CPUNO}" V=0 all 2>>"$ERRORFILE"; then
-            exitWithError "'make all' failed" "$sectionName"
+        printLine "make -j${CPUNO} V=1 all"
+        if ! make -j"${CPUNO}" V=1 all >>"${ERRORFILE}" 2>&1; then
+            exitWithError "'make -j${CPUNO} all' failed" "$sectionName"
         fi
         writeErrorSectionFile "end" "$sectionName"
     fi
@@ -267,8 +273,8 @@ buildModules() {
     if [[ $DRY -eq 0 ]]; then
         local sectionName="creating kernel modules"
         writeErrorSectionFile "start" "$sectionName"
-        printLine "make -j${CPUNO} V=0 modules_install headers_install"
-        if ! make -j"${CPUNO}" V=0 modules_install headers_install 2>>"$ERRORFILE"; then
+        printLine "make -j${CPUNO} V=1 modules_install headers_install"
+        if ! make -j"${CPUNO}" V=1 modules_install headers_install >>"${ERRORFILE}" 2>&1; then
             exitWithError "'make modules_install headers_install' failed" "$sectionName"
         fi
         writeErrorSectionFile "end" "$sectionName"
@@ -277,22 +283,21 @@ buildModules() {
 
 editConfig() {
     local sectionName="editing config file"
-    writeErrorSectionFile "start" "$sectionName"
-    if [[ $DRY -eq 0 ]]; then
-        if [[ $EDITCONFIG -eq 1 ]]; then
-            printLine "make -j${CPUNO} V=0 menuconfig"
-
-            if ! make -j"${CPUNO}" V=0 menuconfig 2>>"$ERRORFILE"; then
-                exitWithError "'make menuconfig' failed" "$sectionName"
-            fi
+    local action
+    if [[ $EDITCONFIG -eq 1 ]]; then
+        writeErrorSectionFile "start" "$sectionName"
+        modifyConfig
+        if [[ $DRY -eq 0 ]]; then
+            action="menuconfig"
+        else
+            action="xconfig"
         fi
-    else
-        printLine "make -j${CPUNO} V=0 xconfig"
-        if ! make -j"${CPUNO}" V=0 xconfig 2>>"$ERRORFILE"; then
-            exitWithError "'make xconfig' failed" "$sectionName"
+        printLine "make -j${CPUNO} V=1 ${action}"
+        if ! make -j"${CPUNO}" V=1 "${action}" >>"${ERRORFILE}" 2>&1; then
+            exitWithError "'make ${action}' failed" "$sectionName"
         fi
+        writeErrorSectionFile "end" "$sectionName"
     fi
-    writeErrorSectionFile "end" "$sectionName"
 }
 
 saveConfig() {
@@ -304,12 +309,16 @@ saveConfig() {
     fi
 }
 
+usage() {
+    printLine "Do me..."
+}
+
 install() {
     if [[ $DRY -eq 0 ]]; then
         local sectionName="installing new kernel files"
         writeErrorSectionFile "start" "$sectionName"
         printLine "Linking ${SOURCESDIR} -> /usr/src/${KERNELVERSION}"
-        ln -sf "${SOURCESDIR}" "/usr/src/${KERNELVERSION}"
+        # ln -sf "${SOURCESDIR}" "/usr/src/${KERNELVERSION}"
         if [[ -f ${SOURCESDIR}/System.map ]]; then
             printLine "Copying ${SOURCESDIR}/System.map -> /boot/System.map"
             cp --remove-destination "${SOURCESDIR}/System.map" "/boot/System.map"
@@ -344,40 +353,41 @@ EOF
     fi
 }
 
-getUserInput() {
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-        "--help")
-            usage
-            exit 0
-            ;;
-        "--dry")
-            shift
-            DRY=1
-            ;;
-        "--name")
-            shift
-            KERNELNAME="$1"
-            shift
-            ;;
-        "--configfile")
-            shift
-            TEMPLATEFILE="$(readlink -f "$1")"
-            shift
-            ;;
-        "--tarfile")
-            shift
-            TARFILE="$(readlink -f "$1")"
-            shift
-            ;;
-        *)
-            exitWithError "Unknown command-line option $1"
-            ;;
-        esac
-    done
-}
+while [[ $# -gt 0 ]]; do
+    case "${1}" in
+    "--help")
+        usage
+        exit 0
+        ;;
+    "--dry")
+        shift
+        DRY=1
+        ;;
+    "--name")
+        shift
+        KERNELNAME="${1}"
+        shift
+        ;;
+    "--configfile")
+        shift
+        TEMPLATEFILE="$(readlink -f "${1}")"
+        shift
+        ;;
+    "--edit")
+        EDITCONFIG=1
+        shift
+        ;;
+    "--tarfile")
+        shift
+        TARFILE="$(readlink -f "${1}")"
+        shift
+        ;;
+    *)
+        exitWithError "Unknown command-line option ${1}"
+        ;;
+    esac
+done
 
-getUserInput "$@"
 checkSystem
 if [[ ! -f ${TARFILE} ]]; then
     downloadSources
@@ -387,8 +397,8 @@ extractSources
 cd "${SOURCESDIR}" || exit 2
 prepareBuildDir
 runOlddefconfig
-modifyConfig
 editConfig
+saveConfig
 buildKernel
 buildModules
 install
