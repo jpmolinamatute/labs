@@ -142,19 +142,21 @@ setVariables() {
     if [[ $DRY -eq 1 ]]; then
         BASEDIR="${SRCDIR}/tmpKernel"
     else
-        BASEDIR="/usr/lib/modules"
+        BASEDIR="/usr/src"
     fi
     checkDirectory "${BASEDIR}"
-    modulesdir="${BASEDIR}/${KERNELVERSION}"
-    SOURCESDIR="${modulesdir}/build"
+    modulesdir="/usr/lib/modules/${KERNELVERSION}"
+    SOURCESDIR="${BASEDIR}/${KERNELVERSION}"
     CONFIGFILE="${SOURCESDIR}/.config"
     if [[ -d ${modulesdir} ]]; then
         printLine "removing old '${modulesdir}'"
         rm -rf "${modulesdir}"
     fi
-    if ! mkdir -p "${SOURCESDIR}" 2>/dev/null; then
-        exitWithError "directory '${BASEDIR}' is not writable"
+    if [[ -d ${SOURCESDIR} ]]; then
+        printLine "removing old '${SOURCESDIR}'"
+        rm -rf "${SOURCESDIR}"
     fi
+    mkdir -p "${SOURCESDIR}"
     writeErrorSectionFile "end" "$sectionName"
 }
 
@@ -238,19 +240,22 @@ modifyConfig() {
     local txt
     local swapuuid
     local sectionName="Updating config file"
+    local part="PARTUUID"
     writeErrorSectionFile "start" "$sectionName"
     rootfstype="$(lsblk -o MOUNTPOINT,FSTYPE | grep -E "^/ " | awk '{print $2}')"
-    rootuuid="$(lsblk -o MOUNTPOINT,PARTUUID | grep -E "^/ " | awk '{print $2}')"
-    swapuuid="$(lsblk -o FSTYPE,PARTUUID | grep -E "^swap " | awk '{print $2}')"
+    rootuuid="$(lsblk -o MOUNTPOINT,${part} | grep -E "^/ " | awk '{print $2}')"
+    swapuuid="$(lsblk -o FSTYPE,${part} | grep -E "^swap " | awk '{print $2}')"
     txt="CONFIG_CMDLINE_BOOL=y\\n"
-    txt="${txt}CONFIG_CMDLINE=\"rootfstype=${rootfstype} root=PARTUUID=${rootuuid} rw\"\\n"
+    txt="${txt}CONFIG_CMDLINE=\"rootfstype=${rootfstype} root=${part}=${rootuuid} rw\"\\n"
     # txt="${txt}CONFIG_CMDLINE_OVERRIDE=y\n"
 
     # sed -Ei "s/^#? ?CONFIG_CMDLINE_OVERRIDE(=[ynm]| is not set)//" "$CONFIGFILE"
     sed -Ei "s/^#? ?CONFIG_CMDLINE[ =].*//" "$CONFIGFILE"
     sed -Ei "s/^#? ?CONFIG_CMDLINE_BOOL(=[ynm]| is not set)/${txt}/" "$CONFIGFILE"
     sed -Ei "s/^CONFIG_LOCALVERSION=\".*\"$/CONFIG_LOCALVERSION=\"-${KERNELNAME}\"/" "$CONFIGFILE"
-    sed -Ei "s/^#? ?CONFIG_PM_STD_PARTITION[ =].*$/CONFIG_PM_STD_PARTITION=\"PARTUUID=${swapuuid}\"/" "$CONFIGFILE"
+    if [[ -n ${part} && -n ${swapuuid} ]]; then
+        sed -Ei "s/^#? ?CONFIG_PM_STD_PARTITION[ =].*$/CONFIG_PM_STD_PARTITION=\"${part}=${swapuuid}\"/" "$CONFIGFILE"
+    fi
     sed -Ei "s/^#? ?CONFIG_DEFAULT_HOSTNAME[ =].*$/CONFIG_DEFAULT_HOSTNAME=\"${KERNELNAME}\"/" "$CONFIGFILE"
     writeErrorSectionFile "end" "$sectionName"
 }
@@ -291,7 +296,7 @@ editConfig() {
             action="xconfig"
         fi
         printLine "make -j${CPUNO} V=1 ${action}"
-        if ! make -j"${CPUNO}" V=1 "${action}" >>"${ERRORFILE}" 2>&1; then
+        if ! make -j"${CPUNO}" V=1 "${action}"; then
             exitWithError "'make ${action}' failed" "$sectionName"
         fi
         writeErrorSectionFile "end" "$sectionName"
@@ -315,8 +320,10 @@ install() {
     if [[ $DRY -eq 0 ]]; then
         local sectionName="installing new kernel files"
         writeErrorSectionFile "start" "$sectionName"
-        printLine "Linking ${SOURCESDIR} -> /usr/src/${KERNELVERSION}"
-        ln -sf "${SOURCESDIR}" "/usr/src/${KERNELVERSION}"
+
+        printLine "Saving $CONFIGFILE to /boot/config-${KERNELVERSION}"
+        cp --remove-destination "${CONFIGFILE}" "/boot/config-${KERNELVERSION}"
+
         if [[ -f ${SOURCESDIR}/System.map ]]; then
             printLine "Copying ${SOURCESDIR}/System.map -> /boot/System.map"
             cp --remove-destination "${SOURCESDIR}/System.map" "/boot/System.map"
@@ -335,15 +342,13 @@ install() {
         if ! mkinitcpio -k "${KERNELVERSION}" -g "/boot/initramfs-${KERNELVERSION}.img"; then
             exitWithError "mkinitcpio failed" "$sectionName"
         fi
-
-        printLine "Saving $CONFIGFILE to /boot/config-${KERNELVERSION}"
-        cp --remove-destination "${CONFIGFILE}" "/boot/config-${KERNELVERSION}"
+        unalias ls 2>/dev/null
         printLine "Creating entry file"
         cat <<-EOF >"/boot/loader/entries/${KERNELVERSION}.conf"
 title Arch Linux
 linux /vmlinuz-${KERNELVERSION}
 version ${KERNELVERSION}
-initrd /intel-ucode.img
+initrd /$(basename /boot/*-ucode.img)
 initrd /initramfs-${KERNELVERSION}.img
 EOF
         writeErrorSectionFile "end" "$sectionName"
