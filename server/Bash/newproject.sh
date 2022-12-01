@@ -16,12 +16,13 @@ create_project() {
     fi
     pyenv local "${PYTHON_VERSION_LONG}"
     pip install --upgrade pip
-    if ! which poetry &>/dev/null; then
+    if ! pyenv which poetry &>/dev/null; then
         pip install -U poetry
     fi
-
-    poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --no-interaction --name=src
-    poetry install
+    python -m venv .venv
+    poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --no-interaction
+    poetry lock
+    poetry install --no-root
     echo "" >>"${CONFIG_FILE}"
     poetry run pylint --generate-toml-config >>"${CONFIG_FILE}"
     virtual="$(poetry env info -p)"
@@ -110,7 +111,12 @@ all: format isort lint typehint test
 EOF
 
 echo -e "# ${1} #" >"${MYDIR}/README.md"
-echo -e ".vscode/\n**/__pycache__/" >>"${MYDIR}/.gitignore"
+{
+    echo ".vscode/"
+    echo ".venv/"
+    echo "**/__pycache__/"
+    echo "**/.env"
+} >>"${MYDIR}/.gitignore"
 chmod 755 "${MAIN_PATH}"
 
 create_project
