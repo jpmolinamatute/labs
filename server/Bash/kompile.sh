@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+QT_QPA_PLATFORM=wayland
 CPUNO="$(nproc)"
 THISPATH="$(readlink -f "$0")"
 THISSCRIPT="$(basename "$THISPATH")"
@@ -11,7 +12,7 @@ TEMPLATEFILE=
 BASEDIR=
 KERNELVERSION=
 DRY=0
-export QT_QPA_PLATFORM=wayland
+export QT_QPA_PLATFORM
 
 vercomp() {
     # FROM https://stackoverflow.com/questions/4023830/how-compare-two-strings-in-dot-separated-version-format-in-bash
@@ -67,7 +68,7 @@ exitWithError() {
         writeErrorSectionFile "end" "$2"
     fi
     echo "Please read ${ERRORFILE} for more information" >&2
-    exit 2
+    exit 1
 }
 
 printLine() {
@@ -103,9 +104,6 @@ checkSystem() {
         exitWithError "Please install rsync" "$sectionName"
     fi
 
-    if [[ -z $KERNELNAME ]]; then
-        exitWithError "Please provide a name" "$sectionName"
-    fi
     writeErrorSectionFile "end" "$sectionName"
 }
 
@@ -148,7 +146,7 @@ setVariables() {
     modulesdir="/usr/lib/modules/${KERNELVERSION}"
     SOURCESDIR="${BASEDIR}/${KERNELVERSION}"
     CONFIGFILE="${SOURCESDIR}/.config"
-    if [[ -d ${modulesdir} ]]; then
+    if [[ $DRY -eq 0 && -d ${modulesdir} ]]; then
         printLine "removing old '${modulesdir}'"
         rm -rf "${modulesdir}"
     fi
@@ -246,6 +244,11 @@ modifyConfig() {
     rootuuid="$(lsblk -o MOUNTPOINT,${part} | grep -E "^/ " | awk '{print $2}')"
     swapuuid="$(lsblk -o FSTYPE,${part} | grep -E "^swap " | awk '{print $2}')"
     txt="CONFIG_CMDLINE_BOOL=y\\n"
+
+    if [[ -z $rootuuid ]]; then
+        part="UUID"
+        rootuuid="$(lsblk -o MOUNTPOINT,${part} | grep -E "^/ " | awk '{print $2}')"
+    fi
     txt="${txt}CONFIG_CMDLINE=\"rootfstype=${rootfstype} root=${part}=${rootuuid} rw\"\\n"
     # txt="${txt}CONFIG_CMDLINE_OVERRIDE=y\n"
 
@@ -289,26 +292,21 @@ editConfig() {
     local action
     if [[ $EDITCONFIG -eq 1 ]]; then
         writeErrorSectionFile "start" "$sectionName"
-        modifyConfig
+        # modifyConfig
         if [[ $DRY -eq 0 ]]; then
             action="menuconfig"
         else
             action="xconfig"
         fi
         printLine "make -j${CPUNO} V=1 ${action}"
-        if ! make -j"${CPUNO}" V=1 "${action}"; then
+        if ! make -j"${CPUNO}" V=1 "${action}" >>"${ERRORFILE}" 2>&1; then
             exitWithError "'make ${action}' failed" "$sectionName"
         fi
-        writeErrorSectionFile "end" "$sectionName"
-    fi
-}
-
-saveConfig() {
-    if [[ $DRY -eq 1 ]]; then
         printLine "Copying ${CONFIGFILE} to ${SRCDIR}/config-${KERNELVERSION}"
         if ! cp --remove-destination "${CONFIGFILE}" "${SRCDIR}/config-${KERNELVERSION}"; then
             exitWithError "saving ${SRCDIR}/config-${KERNELVERSION} failed"
         fi
+        writeErrorSectionFile "end" "$sectionName"
     fi
 }
 
@@ -352,32 +350,42 @@ initrd /$(basename /boot/*-ucode.img)
 initrd /initramfs-${KERNELVERSION}.img
 EOF
         writeErrorSectionFile "end" "$sectionName"
+        printLine "updating bootloader"
+        if ! bootctl set-default "${KERNELVERSION}.conf"; then
+            exitWithError "bootctl set-default failed" "$sectionName"
+        fi
         printLine "Kernel ${KERNELVERSION} was successfully installed"
     fi
 }
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
-    "--help")
+    "-h" | "--help")
         usage
         exit 0
         ;;
-    "--dry")
+    "-d" | "--dry")
         shift
         DRY=1
+        EDITCONFIG=1
         ;;
-    "--name")
+    "-n" | "--name")
         shift
         KERNELNAME="${1}"
         shift
         ;;
-    "--configfile")
+    "-c" | "--configfile")
         shift
         TEMPLATEFILE="$(readlink -f "${1}")"
         shift
         ;;
-    "--edit")
+    "-e" | "--edit")
         EDITCONFIG=1
+        shift
+        ;;
+    "-j" | "--cpuno")
+        shift
+        CPUNO="${1}"
         shift
         ;;
     "--tarfile")
@@ -401,7 +409,6 @@ cd "${SOURCESDIR}" || exit 2
 prepareBuildDir
 runOlddefconfig
 editConfig
-saveConfig
 buildKernel
 buildModules
 install

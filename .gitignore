@@ -39,3 +39,4 @@ server/Python/python
 server/Bash/tmpKernel
 server/Bash/configs
 server/Bash/Error
+server/Bash/config-*
