@@ -3,12 +3,16 @@ import requests
 import time
 import concurrent.futures
 import threading
+import math
 
 
-thread_local = threading.local()
+def calc():
+    for i in range(0, 4000000):
+        math.sqrt(i)
 
 
 def get_session():
+    thread_local = threading.local()
     if not getattr(thread_local, "session", None):
         thread_local.session = requests.Session()
     return thread_local.session
@@ -32,5 +36,6 @@ if __name__ == "__main__":
     ] * 80
     start_time = time.time()
     download_all_sites(sites)
+    isinstance(var, int)
     duration = time.time() - start_time
     print(f"Downloaded {len(sites)} in {duration} seconds")

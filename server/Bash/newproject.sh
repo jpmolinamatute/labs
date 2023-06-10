@@ -1,16 +1,37 @@
 #!/usr/bin/env bash
 
-PROJECT_NAME="${1}"
 PYTHON_VERSION_SHORT="3.10"
-PYTHON_VERSION_LONG="${PYTHON_VERSION_SHORT}".8
+PYTHON_VERSION_LONG="${PYTHON_VERSION_SHORT}.8"
 PYTHON_VERSION_BLACK="310"
-MYDIR="$(pwd)/${PROJECT_NAME}"
-CONFIG_FILE="${MYDIR}/pyproject.toml"
-MAIN_PATH="${MYDIR}/main.py"
 set -e
 
-create_project() {
-    cd "${MYDIR}" || exit 1
+preflight_check() {
+    local project_raw_path="${1}"
+    if [[ -z ${project_raw_path} ]]; then
+        echo "Usage: $0 <project-path>/<project-name>"
+        exit 1
+    fi
+    project_dir="$(realpath "$(dirname "${project_raw_path}")")"
+    if [[ -d "${project_dir}" ]]; then
+        if [[ ! -w ${project_dir} ]]; then
+            echo "Error: ${project_dir} is not writable" >&2
+            exit 1
+        fi
+        project_path="${project_dir}/$(basename "${project_raw_path}")"
+        if [[ -d "${project_path}" ]]; then
+            echo "Error: ${project_path} already exists" >&2
+            exit 1
+        fi
+    else
+        echo "Error: ${project_dir} does not exist" >&2
+        exit 1
+    fi
+}
+
+install_dependencies() {
+    local project_path
+    project_path="$(realpath "${1}")"
+    cd "${project_path}" || exit 1
     if ! pyenv versions | grep "${PYTHON_VERSION_LONG}" >/dev/null; then
         pyenv install "${PYTHON_VERSION_LONG}"
     fi
@@ -19,31 +40,24 @@ create_project() {
     if ! pyenv which poetry &>/dev/null; then
         pip install -U poetry
     fi
-    python -m venv .venv
-    poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --no-interaction
+
+    poetry config virtualenvs.in-project true --local
+    poetry config virtualenvs.create true --local
+    poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --dev-dependency=invoke --dev-dependency=types-invoke --no-interaction
     poetry lock
     poetry install --no-root
-    echo "" >>"${CONFIG_FILE}"
-    poetry run pylint --generate-toml-config >>"${CONFIG_FILE}"
-    virtual="$(poetry env info -p)"
+
     git init
-    cd - || exit 1
+    cd - >>/dev/null || exit 1
 }
 
-if [[ -z ${1} ]]; then
-    echo "Usage: $0 <project-name>"
-    exit 1
-fi
+create_files() {
+    local project_path
+    project_path="$(realpath "${1}")"
+    mkdir -p "${project_path}/.vscode" "${project_path}/src" "${project_path}/tests"
+    touch "${project_path}/src/__init__.py" "${project_path}/tests/__init__.py"
 
-if [[ ! -w $(pwd) ]]; then
-    echo "You must run this script from a writable directory"
-    exit 1
-fi
-
-mkdir -p "${MYDIR}/.vscode" "${MYDIR}/src" "${MYDIR}/tests"
-touch "${MYDIR}/src/__init__.py" "${MYDIR}/tests/__init__.py"
-
-cat <<EOF >"${MAIN_PATH}"
+    cat <<EOF >"${project_path}/main.py"
 #!/usr/bin/env python
 import logging
 import sys
@@ -68,67 +82,133 @@ if __name__ == "__main__":
     main()
 EOF
 
-cat <<EOF >"${MYDIR}/Makefile"
-SHELL := bash
-.ONESHELL:
+    cat <<EOF >"${project_path}/tasks.py"
+from invoke import task, Collection
 
-.PHONY: help clean activate_venv lint test run format typehint isort all
+ns = Collection()
 
-help:
-	@echo "---------------HELP-----------------"
-	@echo "To activate the virtual environment type 'make activate_venv'"
-	@echo "To run pylint in the project type 'make lint'"
-	@echo "To run mypy in the project type 'make typehint'"
-	@echo "To run black in the project type 'make black'"
-	@echo "To run test in the project type 'make test'"
-	@echo "------------------------------------"
 
-clean:
-	find . -type d -name __pycache__ -exec rm -rv {} +
+@task
+def run_isort(c) -> None:
+    """Run isort on source"""
+    print("Running ISORT")
+    print("-------------")
+    c.run("isort --settings-path=./pyproject.toml src/", pty=True)
+    print("Done")
 
-activate_venv:
-	poetry shell
 
-lint:
-	poetry run pylint --rcfile=${CONFIG_FILE} src/
+@task
+def run_black(c) -> None:
+    """Run black code formatter on source"""
+    print("Running BLACK")
+    print("-------------")
+    c.run("black --config=./pyproject.toml src/", pty=True)
+    print("Done")
 
-test:
-	poetry run pytest
 
-format:
-	poetry run black --config=${CONFIG_FILE} src/
+@task
+def run_pylint(c) -> None:
+    """Run pylint on source"""
+    print("Running PYLINT")
+    print("--------------")
+    c.run("pylint --rcfile=./pyproject.toml src/", pty=True)
+    print("Done")
 
-typehint:
-	poetry run mypy --config-file=${CONFIG_FILE} src/
 
-run:
-	${MAIN_PATH}
+@task
+def run_mypy(c) -> None:
+    """Run mypy type checking on source"""
+    print("Running MYPY")
+    print("------------")
+    c.run("mypy --config-file=./pyproject.toml --check-untyped-defs src/", pty=True)
+    print("Done")
 
-isort:
-	poetry run isort --settings-path=${CONFIG_FILE} src/
 
-all: format isort lint typehint test
+@task
+def run_all(c) -> None:
+    """Run all code quality checks"""
+    run_isort(c)
+    run_black(c)
+    run_pylint(c)
+    run_mypy(c)
+
+
+ns = Collection()
+precheck = Collection("precheck")
+precheck.add_task(run_pylint, "pylint")
+precheck.add_task(run_mypy, "mypy")
+precheck.add_task(run_black, "black")
+precheck.add_task(run_isort, "isort")
+precheck.add_task(run_all, "all")
+ns.add_collection(precheck)
 EOF
 
-echo -e "# ${1} #" >"${MYDIR}/README.md"
+    cat <<EOF >"${project_path}/.vscode/settings.json"
 {
-    echo ".vscode/"
-    echo ".venv/"
-    echo "**/__pycache__/"
-    echo "**/.env"
-} >>"${MYDIR}/.gitignore"
-chmod 755 "${MAIN_PATH}"
+    "editor.rulers": [
+        120
+    ],
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120,
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "./.venv/bin/black",
+    "python.formatting.blackArgs": [
+        "--config=./pyproject.toml"
+    ],
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyPath": "./.venv/bin/mypy",
+    "python.linting.mypyArgs": [
+        "--config-file=./pyproject.toml"
+    ],
+    "isort.importStrategy": "fromEnvironment",
+    "isort.interpreter": [
+        "./.venv/bin/python"
+    ],
+    "isort.path": [
+        "./.venv/bin/isort"
+    ],
+    "isort.args": [
+        "--settings-path=./pyproject.toml"
+    ],
+    "pylint.importStrategy": "fromEnvironment",
+    "pylint.interpreter": [
+        "./.venv/bin/python"
+    ],
+    "pylint.path": [
+        "./.venv/bin/pylint"
+    ],
+    "pylint.args": [
+        "--rcfile=./pyproject.toml"
+    ],
 
-create_project
+    "python.testing.pytestPath": "./.venv/bin/pytest",
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
+}
+EOF
 
-cat <<EOF >>"${CONFIG_FILE}"
+    echo -e " # ${1} #" >"${project_path}/README.md"
+    {
+        echo ".venv/"
+        echo "**/__pycache__/"
+        echo "**/.env"
+    } >>"${project_path}/.gitignore"
+    chmod 755 "${project_path}/main.py"
+}
 
+update_config_file() {
+    local project_path
+    project_path="$(realpath "${1}")"
+    cd "${project_path}" || exit 1
+    cat <<EOF >>"${project_path}/pyproject.toml"
 [tool.isort]
 profile = "black"
 line_length = 120
 py_version = ${PYTHON_VERSION_BLACK}
 lines_after_imports = 2
-virtual_env = "${virtual}"
+virtual_env = "./.venv"
 
 [tool.black]
 line-length = 120
@@ -148,47 +228,15 @@ minversion = "6.0"
 testpaths = [
     "tests"
 ]
-
 EOF
 
-cat <<EOF >"${MYDIR}/.vscode/settings.json"
-{
-    "editor.rulers": [
-        120
-    ],
-    "editor.wordWrap": "wordWrapColumn",
-    "editor.wordWrapColumn": 120,
-    "python.formatting.provider": "black",
-    "python.formatting.blackPath": "${virtual}/bin/black",
-    "python.formatting.blackArgs": [
-        "--config=${CONFIG_FILE}"
-    ],
-    "python.linting.mypyEnabled": true,
-    "python.linting.mypyPath": "${virtual}/bin/mypy",
-    "python.linting.mypyArgs": [
-        "--config-file=${CONFIG_FILE}"
-    ],
-    "isort.importStrategy": "fromEnvironment",
-    "isort.interpreter": [
-        "${virtual}/bin/python"
-    ],
-    "isort.path": [
-        "${virtual}/bin/isort"
-    ],
-    "pylint.importStrategy": "fromEnvironment",
-    "pylint.interpreter": [
-        "${virtual}/bin/python"
-    ],
-    "pylint.path": [
-        "${virtual}/bin/pylint"
-    ],
-    "pylint.args": [
-        "--rcfile=${CONFIG_FILE}"
-    ],
-
-    "python.testing.pytestPath": "${virtual}/bin/pytest",
-    "python.defaultInterpreterPath": "${virtual}/bin/python"
+    poetry run pylint --generate-toml-config >>"${project_path}/pyproject.toml"
+    cd - >>/dev/null || exit 1
 }
-EOF
+
+preflight_check "${1}"
+create_files "${1}"
+install_dependencies "${1}"
+update_config_file "${1}"
 
 exit 0
