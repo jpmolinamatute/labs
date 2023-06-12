@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-PYTHON_VERSION_SHORT="3.10"
-PYTHON_VERSION_LONG="${PYTHON_VERSION_SHORT}.8"
-PYTHON_VERSION_BLACK="310"
+PYTHON_VERSION_SHORT="3.11"
+PYTHON_VERSION_LONG="${PYTHON_VERSION_SHORT}.4"
+PYTHON_VERSION_BLACK="311"
 set -e
 
 preflight_check() {
@@ -11,53 +11,36 @@ preflight_check() {
         echo "Usage: $0 <project-path>/<project-name>"
         exit 1
     fi
-    project_dir="$(realpath "$(dirname "${project_raw_path}")")"
-    if [[ -d "${project_dir}" ]]; then
-        if [[ ! -w ${project_dir} ]]; then
-            echo "Error: ${project_dir} is not writable" >&2
+    project_path="$(realpath "$(dirname "${project_raw_path}")")"
+    if [[ -d "${project_path}" ]]; then
+        if [[ ! -w ${project_path} ]]; then
+            echo "Error: ${project_path} is not writable" >&2
             exit 1
         fi
-        project_path="${project_dir}/$(basename "${project_raw_path}")"
-        if [[ -d "${project_path}" ]]; then
-            echo "Error: ${project_path} already exists" >&2
+        project_name="$(basename "${project_raw_path}")"
+        if [[ -d ${project_path}/${project_name} ]]; then
+            echo "Error: ${project_path}/${project_name} already exists" >&2
+            exit 1
+        elif [[ ! $project_name =~ ^[a-z][a-z0-9-]+[a-z]$ ]]; then
+            echo "Error: ${project_name} is not a valid project name" >&2
             exit 1
         fi
     else
-        echo "Error: ${project_dir} does not exist" >&2
+        echo "Error: ${project_path} does not exist" >&2
+        exit 1
+    fi
+    if ! command -v pyenv &>/dev/null; then
+        echo "Error: pyenv is not installed" >&2
         exit 1
     fi
 }
 
-install_dependencies() {
-    local project_path
-    project_path="$(realpath "${1}")"
-    cd "${project_path}" || exit 1
-    if ! pyenv versions | grep "${PYTHON_VERSION_LONG}" >/dev/null; then
-        pyenv install "${PYTHON_VERSION_LONG}"
-    fi
-    pyenv local "${PYTHON_VERSION_LONG}"
-    pip install --upgrade pip
-    if ! pyenv which poetry &>/dev/null; then
-        pip install -U poetry
-    fi
-
-    poetry config virtualenvs.in-project true --local
-    poetry config virtualenvs.create true --local
-    poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --dev-dependency=invoke --dev-dependency=types-invoke --no-interaction
-    poetry lock
-    poetry install --no-root
-
-    git init
-    cd - >>/dev/null || exit 1
-}
-
 create_files() {
-    local project_path
-    project_path="$(realpath "${1}")"
-    mkdir -p "${project_path}/.vscode" "${project_path}/src" "${project_path}/tests"
-    touch "${project_path}/src/__init__.py" "${project_path}/tests/__init__.py"
+    local project_name="${1}"
+    mkdir -p "${project_name}/.vscode" "${project_name}/src" "${project_name}/tests"
+    touch "${project_name}/src/__init__.py" "${project_name}/tests/__init__.py"
 
-    cat <<EOF >"${project_path}/main.py"
+    cat <<EOF >"${project_name}/main.py"
 #!/usr/bin/env python
 import logging
 import sys
@@ -82,7 +65,7 @@ if __name__ == "__main__":
     main()
 EOF
 
-    cat <<EOF >"${project_path}/tasks.py"
+    cat <<EOF >"${project_name}/tasks.py"
 from invoke import task, Collection
 
 ns = Collection()
@@ -93,7 +76,7 @@ def run_isort(c) -> None:
     """Run isort on source"""
     print("Running ISORT")
     print("-------------")
-    c.run("isort --settings-path=./pyproject.toml src/", pty=True)
+    c.run("isort --settings-path=./pyproject.toml ./src", pty=True)
     print("Done")
 
 
@@ -102,7 +85,7 @@ def run_black(c) -> None:
     """Run black code formatter on source"""
     print("Running BLACK")
     print("-------------")
-    c.run("black --config=./pyproject.toml src/", pty=True)
+    c.run("black --config=./pyproject.toml ./src", pty=True)
     print("Done")
 
 
@@ -111,7 +94,7 @@ def run_pylint(c) -> None:
     """Run pylint on source"""
     print("Running PYLINT")
     print("--------------")
-    c.run("pylint --rcfile=./pyproject.toml src/", pty=True)
+    c.run("pylint --rcfile=./pyproject.toml ./src ./tests", pty=True)
     print("Done")
 
 
@@ -120,7 +103,7 @@ def run_mypy(c) -> None:
     """Run mypy type checking on source"""
     print("Running MYPY")
     print("------------")
-    c.run("mypy --config-file=./pyproject.toml --check-untyped-defs src/", pty=True)
+    c.run("mypy --config-file=./pyproject.toml --check-untyped-defs ./src ./tests", pty=True)
     print("Done")
 
 
@@ -143,13 +126,13 @@ precheck.add_task(run_all, "all")
 ns.add_collection(precheck)
 EOF
 
-    cat <<EOF >"${project_path}/.vscode/settings.json"
+    cat <<EOF >"${project_name}/.vscode/settings.json"
 {
     "editor.rulers": [
-        120
+        100
     ],
     "editor.wordWrap": "wordWrapColumn",
-    "editor.wordWrapColumn": 120,
+    "editor.wordWrapColumn": 100,
     "python.formatting.provider": "black",
     "python.formatting.blackPath": "./.venv/bin/black",
     "python.formatting.blackArgs": [
@@ -189,20 +172,17 @@ EOF
 }
 EOF
 
-    echo -e " # ${1} #" >"${project_path}/README.md"
+    echo -e " # ${1} #" >"${project_name}/README.md"
     {
         echo ".venv/"
         echo "**/__pycache__/"
         echo "**/.env"
-    } >>"${project_path}/.gitignore"
-    chmod 755 "${project_path}/main.py"
+    } >>"${project_name}/.gitignore"
+    chmod 755 "${project_name}/main.py"
 }
 
 update_config_file() {
-    local project_path
-    project_path="$(realpath "${1}")"
-    cd "${project_path}" || exit 1
-    cat <<EOF >>"${project_path}/pyproject.toml"
+    cat <<EOF >>"${1}/pyproject.toml"
 [tool.isort]
 profile = "black"
 line_length = 120
@@ -230,13 +210,41 @@ testpaths = [
 ]
 EOF
 
-    poetry run pylint --generate-toml-config >>"${project_path}/pyproject.toml"
+}
+
+configuring_poetry() {
+    cd "${1}" || exit 1
+    if ! pyenv versions | grep "${PYTHON_VERSION_LONG}" >/dev/null; then
+        echo "Installing Python ${PYTHON_VERSION_LONG}"
+        pyenv install "${PYTHON_VERSION_LONG}"
+    fi
+    pyenv local "${PYTHON_VERSION_LONG}"
+    pip install --upgrade pip
+    if ! pyenv which poetry &>/dev/null; then
+        echo "Installing Poetry"
+        pip install -U poetry
+    fi
+    echo "Configuring Poetry"
+    poetry config virtualenvs.in-project true --local
+    poetry config virtualenvs.create true --local
+    poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --dev-dependency=invoke --dev-dependency=types-invoke --dev-dependency=bpython --no-interaction
+    poetry install --no-root --sync
+    echo "" >>"./pyproject.toml"
+    poetry run pylint --generate-toml-config >>./pyproject.toml
+    sed -i "s/# init-hook =/init-hook = 'import sys; sys.path.append(\"src\")'/" ./pyproject.toml
+    sed -i "s/jobs = 4/jobs = 0/" ./pyproject.toml
     cd - >>/dev/null || exit 1
 }
 
-preflight_check "${1}"
-create_files "${1}"
-install_dependencies "${1}"
-update_config_file "${1}"
+run() {
+    preflight_check "${1}"
+    project_path="$(realpath "$(dirname "${1}")")"
+    project_path="${project_path}/$(basename "${1}")"
+    create_files "${project_path}"
+    configuring_poetry "${project_path}"
+    update_config_file "${project_path}"
+    git init "${project_path}"
+}
 
+run "${@}"
 exit 0
