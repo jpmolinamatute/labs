@@ -1,9 +1,29 @@
 #!/usr/bin/env bash
 
-PYTHON_VERSION_SHORT="3.11"
-PYTHON_VERSION_LONG="${PYTHON_VERSION_SHORT}.4"
-PYTHON_VERSION_BLACK="311"
+PYTHON_VERSION="3.12"
+
 set -e
+
+get_python_version() {
+    # @TODO: I would like to rewrite this function in the future to return the
+    #        Python version in the format that the calling function expects it, i.e.:
+    #        3.12, 3.12.0, 312, etc.
+
+    if [[ -z ${PYTHON_VERSION} ]]; then
+        exit 1
+    elif [[ ${PYTHON_VERSION} =~ ^[0-9]+\.[0-9]+$ ]]; then
+        PYTHON_VERSION_SHORT="${PYTHON_VERSION}"
+        PYTHON_VERSION_LONG="${PYTHON_VERSION}.0"
+        PYTHON_VERSION_BLACK="${PYTHON_VERSION//./}"
+    elif [[ ${PYTHON_VERSION} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        PYTHON_VERSION_SHORT="${PYTHON_VERSION%.*}"
+        PYTHON_VERSION_LONG="${PYTHON_VERSION}"
+        PYTHON_VERSION_BLACK="${PYTHON_VERSION//./}"
+    else
+        echo "Error: ${PYTHON_VERSION} is not a valid Python version" >&2
+        exit 1
+    fi
+}
 
 preflight_check() {
     local project_raw_path="${1}"
@@ -21,7 +41,7 @@ preflight_check() {
         if [[ -d ${project_path}/${project_name} ]]; then
             echo "Error: ${project_path}/${project_name} already exists" >&2
             exit 1
-        elif [[ ! $project_name =~ ^[a-z][a-z0-9-]+[a-z]$ ]]; then
+        elif [[ ! $project_name =~ ^[a-z][a-z0-9_-]+[a-z]$ ]]; then
             echo "Error: ${project_name} is not a valid project name" >&2
             exit 1
         fi
@@ -237,6 +257,7 @@ configuring_poetry() {
 }
 
 run() {
+    get_python_version
     preflight_check "${1}"
     project_path="$(realpath "$(dirname "${1}")")"
     project_path="${project_path}/$(basename "${1}")"
