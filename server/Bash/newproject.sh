@@ -41,7 +41,7 @@ preflight_check() {
         if [[ -d ${project_path}/${project_name} ]]; then
             echo "Error: ${project_path}/${project_name} already exists" >&2
             exit 1
-        elif [[ ! $project_name =~ ^[a-z][a-z0-9_-]+[a-z]$ ]]; then
+        elif [[ ! $project_name =~ ^[a-z][a-z0-9_-]+[a-z0-9]$ ]]; then
             echo "Error: ${project_name} is not a valid project name" >&2
             exit 1
         fi
@@ -56,11 +56,11 @@ preflight_check() {
 }
 
 create_files() {
-    local project_name="${1}"
-    mkdir -p "${project_name}/.vscode" "${project_name}/src" "${project_name}/tests"
-    touch "${project_name}/src/__init__.py" "${project_name}/tests/__init__.py"
+    local project_root="${1}"
+    mkdir -p "${project_root}/.vscode" "${project_root}"/app/{src,tests}
+    touch "${project_root}"/app/{src,tests}/__init__.py
 
-    cat <<EOF >"${project_name}/main.py"
+    cat <<EOF >"${project_root}/app/src/main.py"
 #!/usr/bin/env python
 import logging
 import sys
@@ -86,110 +86,107 @@ if __name__ == "__main__":
 EOF
 
     cat <<EOF >"${project_name}/tasks.py"
-from invoke import task, Collection
+from pathlib import Path
+import shutil
+
+from invoke import task, Context, Collection
+
+CURRENT_SCRIPT = Path(__file__).resolve()
+PROJECT_ROOT = CURRENT_SCRIPT.parent
+PYPROJECT = PROJECT_ROOT.joinpath("/pyproject.toml")
+APP_ROOT = PROJECT_ROOT.joinpath("/src/app")
+PTY = True
+ECHO = True
 
 ns = Collection()
+lint = Collection("lint")
+tests = Collection("tests")
 
 
-@task
-def run_isort(c) -> None:
-    """Run isort on source"""
-    print("Running ISORT")
-    print("-------------")
-    c.run("isort --settings-path=./pyproject.toml ./src", pty=True)
-    print("Done")
+def _log_open(msg: str) -> None:
+    terminal_size = shutil.get_terminal_size((80, 20))
+    char_to_use = "="
+    width = terminal_size.columns
+    print(f"\n{char_to_use*width}")
+    padding = (width - len(msg) - 12) // 2
+    msg = f"{char_to_use*padding} Running '{msg}' {char_to_use*padding}"
+    if len(msg) < width:
+        msg += char_to_use
+    print(msg)
+    print(f"{char_to_use*width}\n")
 
 
-@task
-def run_black(c) -> None:
-    """Run black code formatter on source"""
-    print("Running BLACK")
-    print("-------------")
-    c.run("black --config=./pyproject.toml ./src", pty=True)
-    print("Done")
+def _run_pylint(ctx: Context, ignore_failures: bool = True) -> None:
+    cmd = f"pylint --rcfile {PYPROJECT} {APP_ROOT}"
+    _log_open("pylint")
+    ctx.run(cmd, pty=PTY, echo=ECHO, warn=ignore_failures)
 
 
-@task
-def run_pylint(c) -> None:
-    """Run pylint on source"""
-    print("Running PYLINT")
-    print("--------------")
-    c.run("pylint --rcfile=./pyproject.toml ./src ./tests", pty=True)
-    print("Done")
+def _run_black(ctx: Context, ignore_failures: bool = True) -> None:
+    cmd = f"black --config {PYPROJECT} {APP_ROOT}"
+    _log_open("black")
+    ctx.run(cmd, pty=PTY, echo=ECHO, warn=ignore_failures)
 
 
-@task
-def run_mypy(c) -> None:
-    """Run mypy type checking on source"""
-    print("Running MYPY")
-    print("------------")
-    c.run("mypy --config-file=./pyproject.toml --check-untyped-defs ./src ./tests", pty=True)
-    print("Done")
+def _run_isort(ctx: Context, ignore_failures: bool = True) -> None:
+    cmd = f"isort --settings-path {PYPROJECT} {APP_ROOT}"
+    _log_open("isort")
+    ctx.run(cmd, pty=PTY, echo=ECHO, warn=ignore_failures)
 
 
-@task
-def run_all(c) -> None:
-    """Run all code quality checks"""
-    run_isort(c)
-    run_black(c)
-    run_pylint(c)
-    run_mypy(c)
+def _run_mypy(ctx: Context, ignore_failures: bool = True) -> None:
+    cmd = f"mypy --config-file {PYPROJECT} {APP_ROOT}"
+    _log_open("mypy")
+    ctx.run(cmd, pty=PTY, echo=ECHO, warn=ignore_failures)
 
 
-ns = Collection()
-precheck = Collection("precheck")
-precheck.add_task(run_pylint, "pylint")
-precheck.add_task(run_mypy, "mypy")
-precheck.add_task(run_black, "black")
-precheck.add_task(run_isort, "isort")
-precheck.add_task(run_all, "all")
-ns.add_collection(precheck)
-EOF
+@task(name="pylint")
+def pylint(ctx: Context) -> None:
+    _run_pylint(ctx)
 
-    cat <<EOF >"${project_name}/.vscode/settings.json"
-{
-    "editor.rulers": [
-        100
-    ],
-    "editor.wordWrap": "wordWrapColumn",
-    "editor.wordWrapColumn": 100,
-    "python.formatting.provider": "black",
-    "python.formatting.blackPath": "./.venv/bin/black",
-    "python.formatting.blackArgs": [
-        "--config=./pyproject.toml"
-    ],
-    "python.linting.mypyEnabled": true,
-    "python.linting.mypyPath": "./.venv/bin/mypy",
-    "python.linting.mypyArgs": [
-        "--config-file=./pyproject.toml"
-    ],
-    "isort.importStrategy": "fromEnvironment",
-    "isort.interpreter": [
-        "./.venv/bin/python"
-    ],
-    "isort.path": [
-        "./.venv/bin/isort"
-    ],
-    "isort.args": [
-        "--settings-path=./pyproject.toml"
-    ],
-    "pylint.importStrategy": "fromEnvironment",
-    "pylint.interpreter": [
-        "./.venv/bin/python"
-    ],
-    "pylint.path": [
-        "./.venv/bin/pylint"
-    ],
-    "pylint.args": [
-        "--rcfile=./pyproject.toml"
-    ],
 
-    "python.testing.pytestPath": "./.venv/bin/pytest",
-    "python.defaultInterpreterPath": "./.venv/bin/python",
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
-    }
-}
+@task(name="black")
+def black(ctx: Context) -> None:
+    _run_black(ctx)
+
+
+@task(name="isort")
+def isort(ctx: Context) -> None:
+    _run_isort(ctx)
+
+
+@task(name="mypy")
+def mypy(ctx: Context) -> None:
+    _run_mypy(ctx)
+
+
+@task(name="run_all")
+def run_all(ctx: Context, ignore_failures: bool = True) -> None:
+    print("Running ALL linting tools")
+    _run_black(ctx, ignore_failures)
+    _run_isort(ctx, ignore_failures)
+    _run_mypy(ctx, ignore_failures)
+    _run_pylint(ctx, ignore_failures)
+
+
+lint.add_task(pylint)
+lint.add_task(black)
+lint.add_task(isort)
+lint.add_task(mypy)
+lint.add_task(run_all)
+
+
+@task(name="pytest")
+def pytest(ctx: Context) -> None:
+    test_path = APP_ROOT.joinpath("/src/tests")
+    cmd = f"pytest --config-file={PYPROJECT} {test_path}"
+    _log_open("pytest")
+    ctx.run(cmd, pty=PTY, echo=ECHO)
+
+
+tests.add_task(pytest)
+ns.add_collection(lint)
+ns.add_collection(tests)
 EOF
 
     echo -e " # ${1} #" >"${project_name}/README.md"
@@ -198,20 +195,21 @@ EOF
         echo "**/__pycache__/"
         echo "**/.env"
     } >>"${project_name}/.gitignore"
-    chmod 755 "${project_name}/main.py"
+
+    chmod 755 "${project_name}/app/src/main.py"
 }
 
 update_config_file() {
     cat <<EOF >>"${1}/pyproject.toml"
 [tool.isort]
 profile = "black"
-line_length = 120
+line_length = 100
 py_version = ${PYTHON_VERSION_BLACK}
 lines_after_imports = 2
 virtual_env = "./.venv"
 
 [tool.black]
-line-length = 120
+line-length = 100
 target-version = ["py${PYTHON_VERSION_BLACK}"]
 
 [tool.mypy]
@@ -249,10 +247,14 @@ configuring_poetry() {
     poetry config virtualenvs.create true --local
     poetry init --python="${PYTHON_VERSION_LONG}" --dev-dependency=pylint --dev-dependency=mypy --dev-dependency=pytest --dev-dependency=isort --dev-dependency=black --dev-dependency=invoke --dev-dependency=types-invoke --dev-dependency=bpython --no-interaction
     poetry install --no-root --sync
-    echo "" >>"./pyproject.toml"
+    sed -i "7i package-mode = false" ./pyproject.toml
+    sed -i "8i\\" ./pyproject.toml
+
+    echo "" >>./pyproject.toml
     poetry run pylint --generate-toml-config >>./pyproject.toml
-    sed -i "s/# init-hook =/init-hook = 'import sys; sys.path.append(\"src\")'/" ./pyproject.toml
-    sed -i "s/jobs = 4/jobs = 0/" ./pyproject.toml
+    sed -i "s/^# init-hook =/init-hook = 'import sys; sys.path.append(\"app\/src\")'/" ./pyproject.toml
+    sed -i "s/^#? ?jobs = [0-9]/jobs = 0/" ./pyproject.toml
+    sed -i '/disable = \[/ s/\]/, "missing-module-docstring", "missing-function-docstring"]/' ./pyproject.toml
     cd - >>/dev/null || exit 1
 }
 
